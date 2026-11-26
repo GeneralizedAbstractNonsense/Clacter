@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CLADAR — Chronicles of Realms</title>
+    <title>CLACTER</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Press Start 2P (Pixel), VT323 (Retro Terminal), Cinzel & Crimson Text (Fandom Wiki feel) -->
@@ -14,7 +14,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 
     <style>
-        /* Custom Pixel & Undertale Aesthetics */
+        /* Custom Pixel */
         :root {
             --ut-black: #000000;
             --ut-white: #ffffff;
@@ -52,7 +52,7 @@
             font-family: 'Crimson Text', serif;
         }
 
-        /* Undertale Classic Dialogue Box */
+        
         .ut-box {
             background-color: #000000;
             border: 4px solid #ffffff;
@@ -145,12 +145,12 @@
 <body class="min-h-screen w-full relative">
 
     <!-- =====================================================================
-         CANVAS FOR MOVING FIREFLIES (LUCCIOLE)
+         CANVAS FOR MOVING FIREFLIES
     ====================================================================== -->
     <canvas id="firefly-canvas" class="fixed inset-0 pointer-events-none z-10"></canvas>
 
     <!-- =====================================================================
-         VIEW 1: MINIMALIST UNDERTALE LANDING PAGE
+         VIEW 1: LANDING PAGE
     ====================================================================== -->
     <main id="landing-view" class="relative min-h-screen w-full flex flex-col items-center justify-center p-4 sm:p-8 z-20 overflow-hidden">
 
@@ -159,7 +159,7 @@
             [♪ BARD'S CHIME: OFF]
         </button>
 
-        <!-- Decorative Undertale Pixel Lanterns (Scattered) -->
+        <!-- Decorative Pixel Lanterns (Scattered) -->
         <!-- Top Left Lantern -->
         <div class="hidden sm:block absolute top-12 left-10 md:left-24 animate-lantern pointer-events-none" style="animation-delay: 0s;">
             <svg width="42" height="64" viewBox="0 0 14 22" shape-rendering="crispEdges">
@@ -197,7 +197,7 @@
             </svg>
         </div>
 
-        <!-- Bottom Left Undertale Pixel Pumpkin -->
+        <!-- Bottom Left Pixel Pumpkin -->
         <div class="absolute bottom-8 left-6 sm:left-20 animate-pumpkin pointer-events-none">
             <svg width="56" height="52" viewBox="0 0 16 15" shape-rendering="crispEdges">
                 <!-- Stem -->
@@ -222,7 +222,7 @@
             </svg>
         </div>
 
-        <!-- Bottom Right Undertale Pixel Pumpkin & Small Lantern -->
+        <!-- Bottom Right Pixel Pumpkin & Small Lantern -->
         <div class="absolute bottom-10 right-6 sm:right-24 flex items-end gap-4 pointer-events-none">
             <div class="animate-lantern hidden md:block mb-2" style="animation-delay: 0.7s;">
                 <svg width="32" height="48" viewBox="0 0 14 22" shape-rendering="crispEdges">
@@ -250,9 +250,9 @@
             </div>
         </div>
 
-        <!-- CENTERPIECE: CLADAR UNDERTALE TITLE -->
+        <!-- CENTERPIECE: TITLE -->
         <div class="text-center mb-10 sm:mb-12 relative">
-            <!-- Pixel Heart Emblem above CLADAR -->
+            <!-- Pixel Heart Emblem -->
             <div class="flex justify-center mb-4">
                 <svg class="animate-pulse" width="28" height="26" viewBox="0 0 16 16" shape-rendering="crispEdges">
                     <rect x="2" y="2" width="4" height="2" fill="#ff0000"/>
@@ -267,7 +267,7 @@
                 </svg>
             </div>
 
-            <!-- Main CLADAR Logo -->
+            <!-- Main CLATAR Logo -->
             <h1 class="font-pixel text-4xl sm:text-6xl md:text-7xl tracking-[0.2em] text-white drop-shadow-[0_6px_0_rgba(255,255,255,0.2)] select-none">
                 CL<span class="text-yellow-300">A</span>DAR
             </h1>
@@ -276,9 +276,9 @@
             </p>
         </div>
 
-        <!-- UNDERTALE DIALOGUE & WORLD SELECTOR BOX -->
+        <!-- DIALOGUE & WORLD SELECTOR BOX -->
         <div class="ut-box w-full max-w-xl p-5 sm:p-7">
-            <!-- Shakespearean Prompt with Typewriter effect -->
+            
             <div class="flex items-start gap-3 mb-6 min-h-[56px]">
                 <span class="font-pixel text-lg sm:text-xl text-white mt-1">*</span>
                 <p id="landing-dialogue" class="font-vt text-2xl sm:text-3xl leading-snug text-white">
@@ -327,16 +327,16 @@
     </main>
 
     <!-- =====================================================================
-         VIEW 2: FANDOM-STYLE WIKI INTERFACE (SHAKESPEAREAN ENGLISH)
+         VIEW 2: FANDOM-STYLE WIKI INTERFACE
     ====================================================================== -->
     <section id="wiki-view" class="hidden min-h-screen w-full bg-[#111116] text-gray-100 relative z-20 flex flex-col">
 
         <!-- Top Fandom-like Community Header Banner -->
         <header class="bg-[#181822] border-b-2 border-[#323244] px-4 sm:px-8 py-3 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30 shadow-lg">
             <div class="flex items-center gap-4">
-                <!-- Return to Landing (CLADAR) -->
+                <!-- Return to Landing (CLACTER) -->
                 <button onclick="returnToLanding()" onmouseenter="playBlip(380)" class="bg-black border-2 border-white hover:border-yellow-300 text-white hover:text-yellow-300 font-pixel text-[10px] sm:text-xs px-3 py-2 transition-colors flex items-center gap-2">
-                    <span>◄</span> CLADAR
+                    <span>◄</span> CLACTER
                 </button>
 
                 <!-- Realm Emblem & Wiki Title -->
@@ -446,7 +446,7 @@
     </section>
 
     <!-- =====================================================================
-         MODAL 1: FORGE NEW REALM (UNDERTALE STYLE)
+         MODAL 1: FORGE NEW REALM
     ====================================================================== -->
     <div id="new-world-modal" class="hidden fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4">
         <div class="ut-box w-full max-w-lg p-6">
@@ -533,11 +533,11 @@
     </div>
 
     <!-- =====================================================================
-         JAVASCRIPT LOGIC: FIREFLIES, SHAKESPEAREAN WORLDS, & WIKI ENGINE
+         JAVASCRIPT LOGIC: FIREFLIES & WIKI ENGINE
     ====================================================================== -->
     <script>
         /* -------------------------------------------------------------------
-           1. UNDERTALE 8-BIT SOUND SYNTHESIZER (TONE.JS)
+           1. 8-BIT SOUND SYNTHESIZER (TONE.JS)
         ------------------------------------------------------------------- */
         let audioEnabled = false;
         let synth = null;
@@ -571,7 +571,7 @@
         }
 
         /* -------------------------------------------------------------------
-           2. FIREFLIES PARTICLE SYSTEM (LUCCIOLE IN MOVIMENTO)
+           2. FIREFLIES PARTICLE SYSTEM
         ------------------------------------------------------------------- */
         const canvas = document.getElementById('firefly-canvas');
         const ctx = canvas.getContext('2d');
@@ -646,7 +646,7 @@
         animateFireflies();
 
         /* -------------------------------------------------------------------
-           3. SHAKESPEAREAN WORLDBUILDING DATA STORE
+           3. WORLDBUILDING DATA STORE
         ------------------------------------------------------------------- */
         let worldsData = [
             {
@@ -819,7 +819,7 @@
         }
 
         /* -------------------------------------------------------------------
-           5. NAVIGATION BETWEEN LANDING PAGE & FANDOM WIKI
+           5. NAVIGATION BETWEEN LANDING PAGE & WIKI
         ------------------------------------------------------------------- */
         function enterSelectedWorld() {
             playBlip(660);
@@ -867,7 +867,7 @@
         }
 
         /* -------------------------------------------------------------------
-           6. RENDER WIKI HEADER, STATS & ACTIVE TAB (SHAKESPEAREAN ENGLISH)
+           6. RENDER WIKI HEADER, STATS & ACTIVE TAB
         ------------------------------------------------------------------- */
         function renderWiki() {
             const world = worldsData.find(w => w.id === currentWorldId);
