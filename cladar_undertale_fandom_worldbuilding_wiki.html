@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLADAR — Chronicles of Realms</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Press Start 2P (Pixel), VT323 (Retro Terminal), Cinzel & Crimson Text (Fandom Wiki feel) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <!-- Tone.js for subtle Undertale-style 8-bit blips -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        /* Custom Pixel & Undertale Aesthetics */
+        :root {
+            --ut-black: #000000;
+            --ut-white: #ffffff;
+            --ut-yellow: #ffff00;
+            --ut-orange: #ff8c00;
+            --ut-red: #ff0000;
+            --wiki-bg: #111116;
+            --wiki-sidebar: #181820;
+            --wiki-card: #20202b;
+            --wiki-border: #3a3a4d;
+            --wiki-accent: #f59e0b;
+        }
+
+        body {
+            background-color: var(--ut-black);
+            color: var(--ut-white);
+            font-family: 'VT323', monospace;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .font-pixel {
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        .font-vt {
+            font-family: 'VT323', monospace;
+        }
+
+        .font-wiki-title {
+            font-family: 'Cinzel', serif;
+        }
+
+        .font-wiki-body {
+            font-family: 'Crimson Text', serif;
+        }
+
+        /* Undertale Classic Dialogue Box */
+        .ut-box {
+            background-color: #000000;
+            border: 4px solid #ffffff;
+            box-shadow: 0 0 0 4px #000000;
+            position: relative;
+        }
+
+        .ut-btn {
+            background-color: #000000;
+            border: 3px solid #ff8c00;
+            color: #ff8c00;
+            transition: all 0.1s steps(2);
+            cursor: pointer;
+        }
+
+        .ut-btn:hover, .ut-btn.active {
+            border-color: #ffff00;
+            color: #ffff00;
+            transform: scale(1.02);
+        }
+
+        .ut-btn:hover .ut-soul {
+            opacity: 1;
+        }
+
+        .ut-soul {
+            opacity: 0;
+            display: inline-block;
+            color: #ff0000;
+            margin-right: 8px;
+            transition: opacity 0.1s;
+        }
+
+        /* Floating & Glowing Animations for Lanterns and Pumpkins */
+        @keyframes floatLantern {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+
+        @keyframes lanternGlow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 190, 40, 0.7)); }
+            50% { filter: drop-shadow(0 0 18px rgba(255, 220, 90, 0.95)); }
+        }
+
+        @keyframes pumpkinFlicker {
+            0%, 100% { filter: drop-shadow(0 0 6px rgba(255, 110, 0, 0.6)); }
+            33% { filter: drop-shadow(0 0 12px rgba(255, 140, 0, 0.9)); }
+            66% { filter: drop-shadow(0 0 4px rgba(255, 90, 0, 0.4)); }
+        }
+
+        .animate-lantern {
+            animation: floatLantern 4s ease-in-out infinite, lanternGlow 2.5s ease-in-out infinite;
+        }
+
+        .animate-pumpkin {
+            animation: pumpkinFlicker 3s infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border: 2px solid #0a0a0e;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ffff00;
+        }
+
+        /* Tree Connectors for Genealogy */
+        .tree-node {
+            position: relative;
+        }
+        .tree-branch::before {
+            content: '';
+            position: absolute;
+            top: -16px;
+            left: 50%;
+            width: 2px;
+            height: 16px;
+            background-color: #f59e0b;
+        }
+    </style>
+</head>
+<body class="min-h-screen w-full relative">
+
+    <!-- =====================================================================
+         CANVAS FOR MOVING FIREFLIES (LUCCIOLE)
+    ====================================================================== -->
+    <canvas id="firefly-canvas" class="fixed inset-0 pointer-events-none z-10"></canvas>
+
+    <!-- =====================================================================
+         VIEW 1: MINIMALIST UNDERTALE LANDING PAGE
+    ====================================================================== -->
+    <main id="landing-view" class="relative min-h-screen w-full flex flex-col items-center justify-center p-4 sm:p-8 z-20 overflow-hidden">
+
+        <!-- Top Sound Toggle (Subtle Undertale Style) -->
+        <button id="sound-toggle" onclick="toggleAudio()" class="fixed top-4 right-4 z-30 font-pixel text-[10px] sm:text-xs text-gray-400 hover:text-yellow-300 border-2 border-gray-700 hover:border-yellow-300 px-3 py-2 bg-black transition-colors">
+            [♪ BARD'S CHIME: OFF]
+        </button>
+
+        <!-- Decorative Undertale Pixel Lanterns (Scattered) -->
+        <!-- Top Left Lantern -->
+        <div class="hidden sm:block absolute top-12 left-10 md:left-24 animate-lantern pointer-events-none" style="animation-delay: 0s;">
+            <svg width="42" height="64" viewBox="0 0 14 22" shape-rendering="crispEdges">
+                <!-- Chain -->
+                <rect x="6" y="0" width="2" height="4" fill="#6b7280"/>
+                <!-- Cap -->
+                <rect x="4" y="4" width="6" height="2" fill="#374151"/>
+                <rect x="3" y="6" width="8" height="2" fill="#1f2937"/>
+                <!-- Glowing Glass -->
+                <rect x="4" y="8" width="6" height="8" fill="#f59e0b"/>
+                <rect x="5" y="9" width="4" height="6" fill="#fef08a"/>
+                <rect x="6" y="10" width="2" height="4" fill="#ffffff"/>
+                <!-- Frame Bars -->
+                <rect x="3" y="8" width="1" height="8" fill="#1f2937"/>
+                <rect x="10" y="8" width="1" height="8" fill="#1f2937"/>
+                <!-- Base -->
+                <rect x="3" y="16" width="8" height="2" fill="#1f2937"/>
+                <rect x="5" y="18" width="4" height="2" fill="#374151"/>
+            </svg>
+        </div>
+
+        <!-- Top Right Lantern -->
+        <div class="hidden sm:block absolute top-20 right-12 md:right-28 animate-lantern pointer-events-none" style="animation-delay: 1.4s;">
+            <svg width="38" height="58" viewBox="0 0 14 22" shape-rendering="crispEdges">
+                <rect x="6" y="0" width="2" height="4" fill="#6b7280"/>
+                <rect x="4" y="4" width="6" height="2" fill="#374151"/>
+                <rect x="3" y="6" width="8" height="2" fill="#1f2937"/>
+                <rect x="4" y="8" width="6" height="8" fill="#f59e0b"/>
+                <rect x="5" y="9" width="4" height="6" fill="#fef08a"/>
+                <rect x="6" y="10" width="2" height="4" fill="#ffffff"/>
+                <rect x="3" y="8" width="1" height="8" fill="#1f2937"/>
+                <rect x="10" y="8" width="1" height="8" fill="#1f2937"/>
+                <rect x="3" y="16" width="8" height="2" fill="#1f2937"/>
+                <rect x="5" y="18" width="4" height="2" fill="#374151"/>
+            </svg>
+        </div>
+
+        <!-- Bottom Left Undertale Pixel Pumpkin -->
+        <div class="absolute bottom-8 left-6 sm:left-20 animate-pumpkin pointer-events-none">
+            <svg width="56" height="52" viewBox="0 0 16 15" shape-rendering="crispEdges">
+                <!-- Stem -->
+                <rect x="7" y="1" width="2" height="2" fill="#15803d"/>
+                <rect x="8" y="0" width="2" height="1" fill="#166534"/>
+                <!-- Pumpkin Body -->
+                <rect x="4" y="3" width="8" height="1" fill="#ea580c"/>
+                <rect x="2" y="4" width="12" height="2" fill="#f97316"/>
+                <rect x="1" y="6" width="14" height="5" fill="#ea580c"/>
+                <rect x="2" y="11" width="12" height="2" fill="#c2410c"/>
+                <rect x="4" y="13" width="8" height="1" fill="#9a3412"/>
+                <!-- Shading Ribs -->
+                <rect x="5" y="4" width="1" height="9" fill="#c2410c"/>
+                <rect x="10" y="4" width="1" height="9" fill="#c2410c"/>
+                <!-- Glowing Eyes & Grin -->
+                <rect x="4" y="6" width="2" height="2" fill="#fef08a"/>
+                <rect x="10" y="6" width="2" height="2" fill="#fef08a"/>
+                <rect x="4" y="10" width="1" height="1" fill="#fef08a"/>
+                <rect x="5" y="11" width="6" height="1" fill="#fef08a"/>
+                <rect x="11" y="10" width="1" height="1" fill="#fef08a"/>
+                <rect x="7" y="10" width="2" height="1" fill="#ea580c"/>
+            </svg>
+        </div>
+
+        <!-- Bottom Right Undertale Pixel Pumpkin & Small Lantern -->
+        <div class="absolute bottom-10 right-6 sm:right-24 flex items-end gap-4 pointer-events-none">
+            <div class="animate-lantern hidden md:block mb-2" style="animation-delay: 0.7s;">
+                <svg width="32" height="48" viewBox="0 0 14 22" shape-rendering="crispEdges">
+                    <rect x="4" y="4" width="6" height="2" fill="#374151"/>
+                    <rect x="3" y="6" width="8" height="2" fill="#1f2937"/>
+                    <rect x="4" y="8" width="6" height="8" fill="#f59e0b"/>
+                    <rect x="5" y="9" width="4" height="6" fill="#fef08a"/>
+                    <rect x="3" y="8" width="1" height="8" fill="#1f2937"/>
+                    <rect x="10" y="8" width="1" height="8" fill="#1f2937"/>
+                    <rect x="3" y="16" width="8" height="2" fill="#1f2937"/>
+                </svg>
+            </div>
+            <div class="animate-pumpkin" style="animation-delay: 1.2s;">
+                <svg width="48" height="44" viewBox="0 0 16 15" shape-rendering="crispEdges">
+                    <rect x="7" y="1" width="2" height="2" fill="#15803d"/>
+                    <rect x="4" y="3" width="8" height="1" fill="#ea580c"/>
+                    <rect x="2" y="4" width="12" height="2" fill="#f97316"/>
+                    <rect x="1" y="6" width="14" height="5" fill="#ea580c"/>
+                    <rect x="2" y="11" width="12" height="2" fill="#c2410c"/>
+                    <rect x="4" y="13" width="8" height="1" fill="#9a3412"/>
+                    <rect x="4" y="6" width="2" height="2" fill="#fef08a"/>
+                    <rect x="10" y="6" width="2" height="2" fill="#fef08a"/>
+                    <rect x="5" y="10" width="6" height="1" fill="#fef08a"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- CENTERPIECE: CLADAR UNDERTALE TITLE -->
+        <div class="text-center mb-10 sm:mb-12 relative">
+            <!-- Pixel Heart Emblem above CLADAR -->
+            <div class="flex justify-center mb-4">
+                <svg class="animate-pulse" width="28" height="26" viewBox="0 0 16 16" shape-rendering="crispEdges">
+                    <rect x="2" y="2" width="4" height="2" fill="#ff0000"/>
+                    <rect x="10" y="2" width="4" height="2" fill="#ff0000"/>
+                    <rect x="1" y="4" width="6" height="2" fill="#ff0000"/>
+                    <rect x="9" y="4" width="6" height="2" fill="#ff0000"/>
+                    <rect x="1" y="6" width="14" height="3" fill="#ff0000"/>
+                    <rect x="2" y="9" width="12" height="2" fill="#ff0000"/>
+                    <rect x="4" y="11" width="8" height="2" fill="#ff0000"/>
+                    <rect x="6" y="13" width="4" height="2" fill="#ff0000"/>
+                    <rect x="7" y="15" width="2" height="1" fill="#ff0000"/>
+                </svg>
+            </div>
+
+            <!-- Main CLADAR Logo -->
+            <h1 class="font-pixel text-4xl sm:text-6xl md:text-7xl tracking-[0.2em] text-white drop-shadow-[0_6px_0_rgba(255,255,255,0.2)] select-none">
+                CL<span class="text-yellow-300">A</span>DAR
+            </h1>
+            <p class="font-vt text-xl sm:text-2xl text-gray-400 mt-3 tracking-widest uppercase">
+                * A Chronicle of Forged Realms &amp; Mortal Souls *
+            </p>
+        </div>
+
+        <!-- UNDERTALE DIALOGUE & WORLD SELECTOR BOX -->
+        <div class="ut-box w-full max-w-xl p-5 sm:p-7">
+            <!-- Shakespearean Prompt with Typewriter effect -->
+            <div class="flex items-start gap-3 mb-6 min-h-[56px]">
+                <span class="font-pixel text-lg sm:text-xl text-white mt-1">*</span>
+                <p id="landing-dialogue" class="font-vt text-2xl sm:text-3xl leading-snug text-white">
+                    Hark, O Weaver of Fate! Choose thy realm to peruse its sacred tomes, or conjure a new cosmos from the void.
+                </p>
+            </div>
+
+            <!-- World Selector Dropdown + Enter Button -->
+            <div class="space-y-4">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative flex-1">
+                        <label for="world-select" class="block font-pixel text-[10px] text-yellow-300 mb-2">
+                            SELECT THY REALM:
+                        </label>
+                        <select id="world-select" onchange="playBlip(520)" class="w-full bg-black border-2 border-white text-white font-vt text-2xl px-3 py-2.5 focus:outline-none focus:border-yellow-300 cursor-pointer">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+
+                    <div class="flex items-end">
+                        <button onclick="enterSelectedWorld()" onmouseenter="playBlip(440)" class="ut-btn w-full sm:w-auto font-pixel text-xs sm:text-sm px-5 py-3.5 flex items-center justify-center">
+                            <span class="ut-soul">♥</span> ENTER REALM
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="border-t-2 border-dashed border-gray-800 my-4"></div>
+
+                <!-- Forge New World Button -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <span class="font-vt text-xl text-gray-400">
+                        * Dost thou wish to birth a new universe?
+                    </span>
+                    <button onclick="openNewWorldModal()" onmouseenter="playBlip(440)" class="ut-btn font-pixel text-xs px-4 py-3 flex items-center">
+                        <span class="ut-soul">♥</span> + FORGE NEW REALM
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subtle Footer Note -->
+        <div class="mt-8 font-vt text-lg text-gray-500 text-center">
+            * Knowing that countless worlds await thy quill... It fills thee with DETERMINATION.
+        </div>
+    </main>
+
+    <!-- =====================================================================
+         VIEW 2: FANDOM-STYLE WIKI INTERFACE (SHAKESPEAREAN ENGLISH)
+    ====================================================================== -->
+    <section id="wiki-view" class="hidden min-h-screen w-full bg-[#111116] text-gray-100 relative z-20 flex flex-col">
+
+        <!-- Top Fandom-like Community Header Banner -->
+        <header class="bg-[#181822] border-b-2 border-[#323244] px-4 sm:px-8 py-3 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30 shadow-lg">
+            <div class="flex items-center gap-4">
+                <!-- Return to Landing (CLADAR) -->
+                <button onclick="returnToLanding()" onmouseenter="playBlip(380)" class="bg-black border-2 border-white hover:border-yellow-300 text-white hover:text-yellow-300 font-pixel text-[10px] sm:text-xs px-3 py-2 transition-colors flex items-center gap-2">
+                    <span>◄</span> CLADAR
+                </button>
+
+                <!-- Realm Emblem & Wiki Title -->
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded bg-amber-500/20 border border-amber-400 flex items-center justify-center text-amber-300 font-pixel text-sm">
+                        ✦
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 id="wiki-world-title" class="font-wiki-title text-xl sm:text-2xl font-bold text-amber-400 tracking-wide">
+                                THE ASHEN CROWN
+                            </h2>
+                            <span class="hidden sm:inline-block text-xs font-pixel bg-amber-500/20 text-amber-300 px-2 py-0.5 border border-amber-500/40">
+                                WIKI ARCHIVE
+                            </span>
+                        </div>
+                        <p id="wiki-world-subtitle" class="font-wiki-body italic text-sm text-gray-400">
+                            "Where cinders whisper the forgotten oaths of kings."
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Realm Switcher in Wiki Header -->
+            <div class="flex items-center gap-3">
+                <span class="hidden md:inline font-wiki-body italic text-gray-400 text-sm">Traverse to another realm:</span>
+                <select id="wiki-world-switcher" onchange="switchWikiWorld(this.value)" class="bg-[#0e0e14] border border-[#3a3a4d] text-amber-200 font-wiki-body text-base px-3 py-1.5 rounded focus:outline-none focus:border-amber-400">
+                </select>
+            </div>
+        </header>
+
+        <!-- Main Wiki Container: Fandom Left Sidebar + Article Content -->
+        <div class="flex-1 flex flex-col md:flex-row max-w-[1440px] w-full mx-auto">
+
+            <!-- LEFT SIDEBAR (Exact Tabs Requested: World, Characters, Albero genealogico, Relazioni) -->
+            <aside class="w-full md:w-64 lg:w-72 bg-[#16161f] border-b md:border-b-0 md:border-r border-[#2e2e3e] p-4 sm:p-5 shrink-0">
+                <div class="mb-4 pb-2 border-b border-[#2e2e3e]">
+                    <span class="font-pixel text-[10px] text-amber-400 tracking-wider uppercase">
+                        SACRED COMPENDIUM
+                    </span>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <nav class="flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0">
+                    <button onclick="setWikiTab('world')" id="tab-world" class="wiki-nav-btn flex items-center gap-3 px-4 py-3 rounded text-left font-wiki-title font-semibold text-sm sm:text-base transition-all bg-amber-500/20 text-amber-300 border border-amber-500/50 whitespace-nowrap">
+                        <span class="text-lg">🏰</span>
+                        <div>
+                            <div>World</div>
+                            <div class="text-[11px] font-wiki-body font-normal text-gray-400 hidden md:block">Lore, Realms &amp; History</div>
+                        </div>
+                    </button>
+
+                    <button onclick="setWikiTab('characters')" id="tab-characters" class="wiki-nav-btn flex items-center gap-3 px-4 py-3 rounded text-left font-wiki-title font-semibold text-sm sm:text-base transition-all text-gray-300 hover:bg-[#222230] border border-transparent whitespace-nowrap">
+                        <span class="text-lg">🎭</span>
+                        <div>
+                            <div>Characters</div>
+                            <div class="text-[11px] font-wiki-body font-normal text-gray-400 hidden md:block">Dramatis Personæ</div>
+                        </div>
+                    </button>
+
+                    <button onclick="setWikiTab('genealogy')" id="tab-genealogy" class="wiki-nav-btn flex items-center gap-3 px-4 py-3 rounded text-left font-wiki-title font-semibold text-sm sm:text-base transition-all text-gray-300 hover:bg-[#222230] border border-transparent whitespace-nowrap">
+                        <span class="text-lg">🌳</span>
+                        <div>
+                            <div>Albero genealogico</div>
+                            <div class="text-[11px] font-wiki-body font-normal text-gray-400 hidden md:block">Bloodlines &amp; Houses</div>
+                        </div>
+                    </button>
+
+                    <button onclick="setWikiTab('relations')" id="tab-relations" class="wiki-nav-btn flex items-center gap-3 px-4 py-3 rounded text-left font-wiki-title font-semibold text-sm sm:text-base transition-all text-gray-300 hover:bg-[#222230] border border-transparent whitespace-nowrap">
+                        <span class="text-lg">⚔️</span>
+                        <div>
+                            <div>Relazioni</div>
+                            <div class="text-[11px] font-wiki-body font-normal text-gray-400 hidden md:block">Oaths, Bonds &amp; Feuds</div>
+                        </div>
+                    </button>
+                </nav>
+
+                <!-- Fandom-Style Wiki Stats Box -->
+                <div class="hidden md:block mt-8 p-4 bg-[#1d1d28] border border-[#2e2e3e] rounded">
+                    <h4 class="font-wiki-title text-xs uppercase tracking-wider text-amber-400 mb-3 border-b border-[#2e2e3e] pb-1">
+                        Chronicle Statistics
+                    </h4>
+                    <ul class="space-y-2 font-wiki-body text-base text-gray-300">
+                        <li class="flex justify-between">
+                            <span>Inscribed Souls:</span>
+                            <span id="stat-chars" class="font-bold text-amber-300">0</span>
+                        </li>
+                        <li class="flex justify-between">
+                            <span>Bloodlines:</span>
+                            <span id="stat-houses" class="font-bold text-amber-300">0</span>
+                        </li>
+                        <li class="flex justify-between">
+                            <span>Sworn Bonds:</span>
+                            <span id="stat-relations" class="font-bold text-amber-300">0</span>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- MAIN WIKI ARTICLE STAGE -->
+            <div class="flex-1 p-5 sm:p-8 lg:p-10 bg-[#13131a]">
+                <!-- Dynamic Content Injected Here -->
+                <div id="wiki-content-area" class="max-w-5xl mx-auto"></div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- =====================================================================
+         MODAL 1: FORGE NEW REALM (UNDERTALE STYLE)
+    ====================================================================== -->
+    <div id="new-world-modal" class="hidden fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4">
+        <div class="ut-box w-full max-w-lg p-6">
+            <h3 class="font-pixel text-base sm:text-lg text-yellow-300 mb-4">
+                * CONJURE A NEW REALM
+            </h3>
+            <p class="font-vt text-xl text-gray-300 mb-4">
+                Speak the true name of thy creation, O Architect of Worlds:
+            </p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block font-pixel text-[10px] text-white mb-1">REALM NAME:</label>
+                    <input id="new-world-name" type="text" placeholder="e.g. Vale of Silver Tears" class="w-full bg-black border-2 border-white text-white font-vt text-2xl px-3 py-2 focus:outline-none focus:border-yellow-300">
+                </div>
+                <div>
+                    <label class="block font-pixel text-[10px] text-white mb-1">EPITHET / MOTTO:</label>
+                    <input id="new-world-motto" type="text" placeholder="e.g. Where starlight never fades" class="w-full bg-black border-2 border-white text-white font-vt text-2xl px-3 py-2 focus:outline-none focus:border-yellow-300">
+                </div>
+                <div>
+                    <label class="block font-pixel text-[10px] text-white mb-1">GENESIS LORE (SHAKESPEAREAN PROSE):</label>
+                    <textarea id="new-world-lore" rows="3" placeholder="In the dawn of ages, ere the first moon rose..." class="w-full bg-black border-2 border-white text-white font-vt text-xl px-3 py-2 focus:outline-none focus:border-yellow-300"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closeNewWorldModal()" class="ut-btn font-pixel text-xs px-4 py-2.5">
+                    CANCEL
+                </button>
+                <button onclick="createNewWorld()" class="ut-btn font-pixel text-xs px-4 py-2.5 border-yellow-300 text-yellow-300">
+                    ♥ BIRTH REALM
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL 2: ADD NEW CHARACTER TO CURRENT WIKI REALM
+    ====================================================================== -->
+    <div id="new-char-modal" class="hidden fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4">
+        <div class="bg-[#1b1b26] border-2 border-amber-500 rounded-lg w-full max-w-lg p-6 text-gray-100 shadow-2xl">
+            <h3 class="font-wiki-title text-xl font-bold text-amber-400 mb-2">
+                Inscribe a New Soul
+            </h3>
+            <p class="font-wiki-body italic text-gray-300 mb-4">
+                Chronicle a hero, monarch, or villain into the annals of this realm.
+            </p>
+
+            <div class="space-y-3 font-wiki-body text-lg">
+                <div>
+                    <label class="block text-sm font-wiki-title text-amber-300">Name &amp; Title</label>
+                    <input id="char-name" type="text" placeholder="e.g. Lady Isolde of Moor" class="w-full bg-[#111118] border border-[#3a3a4d] rounded px-3 py-1.5 text-white focus:border-amber-400 focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-wiki-title text-amber-300">Noble House / Lineage</label>
+                        <input id="char-house" type="text" placeholder="e.g. House Vane" class="w-full bg-[#111118] border border-[#3a3a4d] rounded px-3 py-1.5 text-white focus:border-amber-400 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-wiki-title text-amber-300">Epithet / Role</label>
+                        <input id="char-role" type="text" placeholder="e.g. Keeper of Lanterns" class="w-full bg-[#111118] border border-[#3a3a4d] rounded px-3 py-1.5 text-white focus:border-amber-400 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-wiki-title text-amber-300">Mortal Chronicle (Bio)</label>
+                    <textarea id="char-bio" rows="3" placeholder="Born beneath a weeping comet, she swore..." class="w-full bg-[#111118] border border-[#3a3a4d] rounded px-3 py-1.5 text-white focus:border-amber-400 focus:outline-none"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closeNewCharModal()" class="px-4 py-2 rounded border border-gray-600 text-gray-300 hover:bg-gray-800 font-wiki-title text-xs">
+                    Dismiss
+                </button>
+                <button onclick="saveNewCharacter()" class="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-black font-bold font-wiki-title text-xs">
+                    Inscribe Soul
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Notification Toast (Replaces alert()) -->
+    <div id="toast-box" class="hidden fixed bottom-5 right-5 z-50 bg-black border-2 border-yellow-300 text-yellow-300 font-pixel text-xs px-4 py-3 shadow-lg">
+        * Realm inscribed!
+    </div>
+
+    <!-- =====================================================================
+         JAVASCRIPT LOGIC: FIREFLIES, SHAKESPEAREAN WORLDS, & WIKI ENGINE
+    ====================================================================== -->
+    <script>
+        /* -------------------------------------------------------------------
+           1. UNDERTALE 8-BIT SOUND SYNTHESIZER (TONE.JS)
+        ------------------------------------------------------------------- */
+        let audioEnabled = false;
+        let synth = null;
+
+        function toggleAudio() {
+            const btn = document.getElementById('sound-toggle');
+            if (!audioEnabled) {
+                Tone.start();
+                synth = new Tone.Synth({
+                    oscillator: { type: 'square' },
+                    envelope: { attack: 0.005, decay: 0.05, sustain: 0, release: 0.05 }
+                }).toDestination();
+                synth.volume.value = -14;
+                audioEnabled = true;
+                btn.textContent = "[♪ BARD'S CHIME: ON]";
+                btn.classList.add('text-yellow-300', 'border-yellow-300');
+                playBlip(660);
+            } else {
+                audioEnabled = false;
+                btn.textContent = "[♪ BARD'S CHIME: OFF]";
+                btn.classList.remove('text-yellow-300', 'border-yellow-300');
+            }
+        }
+
+        function playBlip(freq = 440) {
+            if (audioEnabled && synth) {
+                try {
+                    synth.triggerAttackRelease(freq, "32n");
+                } catch (e) { /* Ignore rapid triggers */ }
+            }
+        }
+
+        /* -------------------------------------------------------------------
+           2. FIREFLIES PARTICLE SYSTEM (LUCCIOLE IN MOVIMENTO)
+        ------------------------------------------------------------------- */
+        const canvas = document.getElementById('firefly-canvas');
+        const ctx = canvas.getContext('2d');
+        let fireflies = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Firefly {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2.5 + 1.5; // Pixel-ish square size
+                this.vx = (Math.random() - 0.5) * 0.6;
+                this.vy = (Math.random() - 0.5) * 0.6;
+                this.alpha = Math.random();
+                this.alphaSpeed = (Math.random() * 0.02) + 0.005;
+                this.color = Math.random() > 0.3 ? '#fef08a' : '#fb923c'; // Warm yellow & amber
+            }
+            update() {
+                this.x += this.vx + Math.sin(Date.now() * 0.001 + this.y * 0.01) * 0.2;
+                this.y += this.vy + Math.cos(Date.now() * 0.001 + this.x * 0.01) * 0.2;
+
+                this.alpha += this.alphaSpeed;
+                if (this.alpha >= 1 || this.alpha <= 0.1) {
+                    this.alphaSpeed *= -1;
+                }
+
+                // Wrap around screen
+                if (this.x < 0) this.x = canvas.width;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.y < 0) this.y = canvas.height;
+                if (this.y > canvas.height) this.y = 0;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, Math.min(1, this.alpha));
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                // Draw crisp pixel-style square firefly
+                ctx.fillRect(Math.floor(this.x), Math.floor(this.y), Math.ceil(this.size), Math.ceil(this.size));
+                ctx.restore();
+            }
+        }
+
+        function initFireflies() {
+            fireflies = [];
+            const count = window.innerWidth < 640 ? 22 : 42;
+            for (let i = 0; i < count; i++) {
+                fireflies.push(new Firefly());
+            }
+        }
+
+        function animateFireflies() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            fireflies.forEach(f => {
+                f.update();
+                f.draw();
+            });
+            requestAnimationFrame(animateFireflies);
+        }
+
+        initFireflies();
+        animateFireflies();
+
+        /* -------------------------------------------------------------------
+           3. SHAKESPEAREAN WORLDBUILDING DATA STORE
+        ------------------------------------------------------------------- */
+        let worldsData = [
+            {
+                id: 'ashen-crown',
+                name: 'The Ashen Crown',
+                motto: 'Where cinders whisper the forgotten oaths of kings.',
+                era: 'The Third Age of Embers',
+                capital: 'Oakhaven-upon-Ash',
+                sovereign: 'Queen Aurelia the Pale',
+                lore: `In days of yore, ere the Great Sundering scorched the firmament, the realm of The Ashen Crown shone as a jewel of alabaster spires and whispering orchards. Yet when King Malakor broke the Lantern Covenant, a perpetual twilight fell upon the land. Now, pilgrims walk by the light of hallowed pumpkins and floating brass lanterns, seeking the lost shards of the Sun-Sceptre.`,
+                geography: [
+                    { name: 'The Lantern Marshes', desc: 'A mist-shrouded fen where will-o’-the-wisps guide only the pure of heart.' },
+                    { name: 'Citadel of Hollow Glass', desc: 'Seat of the Pale Queen, forged from sand fused by dragon-breath.' },
+                    { name: 'The Gourd-Fields of Autumn', desc: 'Ever-harvest lands where luminescent pumpkins ward off the Shadow-Kin.' }
+                ],
+                characters: [
+                    {
+                        id: 'c1',
+                        name: 'Queen Aurelia the Pale',
+                        house: 'House Solis',
+                        role: 'Sovereign of the Twilight Throne',
+                        status: 'Living',
+                        bio: 'Eldest daughter of the fallen King Malakor. She weareth a veil woven of silver thread to conceal the sorrow etched upon her brow, ruling with gentle wisdom and unyielding resolve.'
+                    },
+                    {
+                        id: 'c2',
+                        name: 'Lord Cassian Vane',
+                        house: 'House Vane',
+                        role: 'Warden of the Lanterns',
+                        status: 'Living',
+                        bio: 'Sworn shield-bearer to the Crown. With a halberd of blackened iron and a heart of tempered gold, he patrols the borders against the creeping dark.'
+                    },
+                    {
+                        id: 'c3',
+                        name: 'King Malakor the Sundered',
+                        house: 'House Solis',
+                        role: 'The Oath-Breaker Monarch',
+                        status: 'Deceased',
+                        bio: 'He who dared grasp the forbidden star, bringing the Ashen Winter upon his own bloodline. His spirit yet lingers within the Hollow Crypts.'
+                    },
+                    {
+                        id: 'c4',
+                        name: 'Lady Lyra of the Fen',
+                        house: 'House Reed',
+                        role: 'Oracle of the Fireflies',
+                        status: 'Living',
+                        bio: 'A enigmatic seeress who communes with the glowing insects of the marsh, reading prophecies in their nocturnal dance.'
+                    }
+                ],
+                genealogy: [
+                    {
+                        house: 'Royal House of Solis',
+                        ancestor: 'King Malakor the Sundered (†)',
+                        spouse: 'Queen Seraphina of Dawn (†)',
+                        descendants: ['Queen Aurelia the Pale', 'Prince Dorian (Exiled)']
+                    },
+                    {
+                        house: 'Noble House of Vane',
+                        ancestor: 'Lord Garrick Vane (†)',
+                        spouse: 'Lady Eleanor of Moor',
+                        descendants: ['Lord Cassian Vane', 'Maiden Clara Vane']
+                    }
+                ],
+                relations: [
+                    {
+                        from: 'Queen Aurelia the Pale',
+                        to: 'Lord Cassian Vane',
+                        type: 'Sworn Fealty & Secret Affection',
+                        desc: 'Though bound by strict courtly etiquette, their glances betray a devotion deeper than duty.'
+                    },
+                    {
+                        from: 'Queen Aurelia the Pale',
+                        to: 'King Malakor the Sundered',
+                        type: 'Sorrowful Bloodline',
+                        desc: 'She spendeth her reign mending the ruin wrought by her father’s hubris.'
+                    },
+                    {
+                        from: 'Lord Cassian Vane',
+                        to: 'Lady Lyra of the Fen',
+                        type: 'Wary Alliance',
+                        desc: 'He mistrusts her witch-craft, yet relies upon her lantern-visions to safeguard the realm.'
+                    }
+                ]
+            },
+            {
+                id: 'clockwork-vale',
+                name: 'Veridia of the Brass Moon',
+                motto: 'By gear and grace, time turneth eternal.',
+                era: 'Epoch of the Pendulum',
+                capital: 'Chronos-on-Thames',
+                sovereign: 'Arch-Artificer Oberon',
+                lore: `Suspended amidst a sea of perpetual autumn clouds, Veridia is a realm where ancient magic and intricate clockwork intertwine. Giant brass astrolabes orbit the heavens, and every citizen carries a soul-lantern tuned to the heartbeat of the Great Pendulum.`,
+                geography: [
+                    { name: 'The Cogwheel Woods', desc: 'Forests of copper-barked oaks whose leaves chime like tiny bells.' },
+                    { name: 'Observatory of the Astrolabe', desc: 'Where scholars chart the destinies of unborn heroes.' }
+                ],
+                characters: [
+                    {
+                        id: 'v1',
+                        name: 'Arch-Artificer Oberon',
+                        house: 'Guild of the Pendulum',
+                        role: 'Grand Keeper of Time',
+                        status: 'Living',
+                        bio: 'An immortal tinkerer whose left arm is wrought of gilded brass and starlight.'
+                    },
+                    {
+                        id: 'v2',
+                        name: 'Beatrice Bellweather',
+                        house: 'House Bellweather',
+                        role: 'Sky-Corsair Captain',
+                        status: 'Living',
+                        bio: 'Daring navigator of the cloud-seas, renowned for her wit and unmatched swordplay.'
+                    }
+                ],
+                genealogy: [
+                    {
+                        house: 'House Bellweather',
+                        ancestor: 'Admiral Horatio Bellweather (†)',
+                        spouse: 'Lady Miranda',
+                        descendants: ['Captain Beatrice Bellweather']
+                    }
+                ],
+                relations: [
+                    {
+                        from: 'Arch-Artificer Oberon',
+                        to: 'Captain Beatrice Bellweather',
+                        type: 'Patron & Rogue',
+                        desc: 'He funds her sky-voyages in secret, seeking lost gears from the Lower World.'
+                    }
+                ]
+            }
+        ];
+
+        let currentWorldId = worldsData[0].id;
+        let currentWikiTab = 'world';
+
+        /* -------------------------------------------------------------------
+           4. INITIALIZATION & SELECTOR POPULATION
+        ------------------------------------------------------------------- */
+        function populateWorldSelectors() {
+            const landingSelect = document.getElementById('world-select');
+            const wikiSwitcher = document.getElementById('wiki-world-switcher');
+
+            landingSelect.innerHTML = '';
+            wikiSwitcher.innerHTML = '';
+
+            worldsData.forEach(w => {
+                const opt1 = document.createElement('option');
+                opt1.value = w.id;
+                opt1.textContent = `♥ ${w.name}`;
+                landingSelect.appendChild(opt1);
+
+                const opt2 = document.createElement('option');
+                opt2.value = w.id;
+                opt2.textContent = w.name;
+                wikiSwitcher.appendChild(opt2);
+            });
+
+            landingSelect.value = currentWorldId;
+            wikiSwitcher.value = currentWorldId;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-box');
+            toast.textContent = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        /* -------------------------------------------------------------------
+           5. NAVIGATION BETWEEN LANDING PAGE & FANDOM WIKI
+        ------------------------------------------------------------------- */
+        function enterSelectedWorld() {
+            playBlip(660);
+            const selectedId = document.getElementById('world-select').value;
+            currentWorldId = selectedId;
+            document.getElementById('wiki-world-switcher').value = selectedId;
+
+            document.getElementById('landing-view').classList.add('hidden');
+            document.getElementById('wiki-view').classList.remove('hidden');
+            window.scrollTo(0, 0);
+
+            renderWiki();
+        }
+
+        function returnToLanding() {
+            playBlip(330);
+            document.getElementById('wiki-view').classList.add('hidden');
+            document.getElementById('landing-view').classList.remove('hidden');
+            populateWorldSelectors();
+        }
+
+        function switchWikiWorld(worldId) {
+            playBlip(520);
+            currentWorldId = worldId;
+            renderWiki();
+        }
+
+        function setWikiTab(tabName) {
+            playBlip(480);
+            currentWikiTab = tabName;
+
+            // Update active button styles
+            document.querySelectorAll('.wiki-nav-btn').forEach(btn => {
+                btn.classList.remove('bg-amber-500/20', 'text-amber-300', 'border-amber-500/50');
+                btn.classList.add('text-gray-300', 'border-transparent');
+            });
+
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-gray-300', 'border-transparent');
+                activeBtn.classList.add('bg-amber-500/20', 'text-amber-300', 'border-amber-500/50');
+            }
+
+            renderWikiContent();
+        }
+
+        /* -------------------------------------------------------------------
+           6. RENDER WIKI HEADER, STATS & ACTIVE TAB (SHAKESPEAREAN ENGLISH)
+        ------------------------------------------------------------------- */
+        function renderWiki() {
+            const world = worldsData.find(w => w.id === currentWorldId);
+            if (!world) return;
+
+            document.getElementById('wiki-world-title').textContent = world.name.toUpperCase();
+            document.getElementById('wiki-world-subtitle').textContent = `"${world.motto}"`;
+
+            // Update sidebar stats
+            document.getElementById('stat-chars').textContent = world.characters.length;
+            document.getElementById('stat-houses').textContent = world.genealogy.length;
+            document.getElementById('stat-relations').textContent = world.relations.length;
+
+            renderWikiContent();
+        }
+
+        function renderWikiContent() {
+            const world = worldsData.find(w => w.id === currentWorldId);
+            const container = document.getElementById('wiki-content-area');
+            if (!world || !container) return;
+
+            if (currentWikiTab === 'world') {
+                container.innerHTML = `
+                    <!-- Fandom-Style Article Header -->
+                    <div class="border-b border-[#323244] pb-4 mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                        <div>
+                            <div class="text-xs font-pixel text-amber-400 mb-1">REALM OVERVIEW</div>
+                            <h1 class="font-wiki-title text-3xl sm:text-4xl font-bold text-white">${world.name}</h1>
+                        </div>
+                        <span class="font-wiki-body italic text-gray-400 text-base">
+                            "Recorded by the Scribes of Cladar"
+                        </span>
+                    </div>
+
+                    <!-- Fandom Infobox + Main Lore Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Left 2 Columns: Lore & Geography -->
+                        <div class="lg:col-span-2 space-y-6 font-wiki-body text-lg sm:text-xl leading-relaxed text-gray-200">
+                            <blockquote class="border-l-4 border-amber-500 pl-4 py-1 italic text-amber-200/90 bg-amber-500/5 rounded-r">
+                                “${world.motto}”
+                            </blockquote>
+
+                            <div>
+                                <h2 class="font-wiki-title text-2xl text-amber-400 border-b border-[#2e2e3e] pb-2 mb-3">
+                                    I. Genesis &amp; Chronicle
+                                </h2>
+                                <p>${world.lore}</p>
+                            </div>
+
+                            <div>
+                                <h2 class="font-wiki-title text-2xl text-amber-400 border-b border-[#2e2e3e] pb-2 mb-3">
+                                    II. Notable Provinces &amp; Landmarks
+                                </h2>
+                                <div class="space-y-4">
+                                    ${world.geography.map(loc => `
+                                        <div class="bg-[#1b1b26] border border-[#2e2e3e] p-4 rounded">
+                                            <h3 class="font-wiki-title text-lg font-bold text-amber-300">${loc.name}</h3>
+                                            <p class="text-gray-300 mt-1">${loc.desc}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Classic Fandom Wiki Infobox -->
+                        <div class="lg:col-span-1">
+                            <div class="bg-[#1a1a24] border-2 border-amber-500/40 rounded overflow-hidden shadow-xl">
+                                <div class="bg-amber-600/20 border-b border-amber-500/40 px-4 py-3 text-center">
+                                    <h3 class="font-wiki-title font-bold text-lg text-amber-300">${world.name}</h3>
+                                </div>
+                                <div class="p-4 flex justify-center bg-[#121218]">
+                                    <!-- Pixel Art Crest SVG -->
+                                    <svg width="80" height="80" viewBox="0 0 16 16" shape-rendering="crispEdges">
+                                        <rect x="3" y="2" width="10" height="10" fill="#f59e0b"/>
+                                        <rect x="4" y="3" width="8" height="8" fill="#181820"/>
+                                        <rect x="7" y="4" width="2" height="6" fill="#fef08a"/>
+                                        <rect x="5" y="6" width="6" height="2" fill="#fef08a"/>
+                                        <rect x="5" y="12" width="6" height="2" fill="#f59e0b"/>
+                                        <rect x="7" y="14" width="2" height="2" fill="#f59e0b"/>
+                                    </svg>
+                                </div>
+                                <div class="divide-y divide-[#2e2e3e] font-wiki-body text-base">
+                                    <div class="px-4 py-2.5 flex justify-between">
+                                        <span class="font-bold text-amber-300/90">Current Epoch:</span>
+                                        <span class="text-gray-300 text-right">${world.era}</span>
+                                    </div>
+                                    <div class="px-4 py-2.5 flex justify-between">
+                                        <span class="font-bold text-amber-300/90">High Seat:</span>
+                                        <span class="text-gray-300 text-right">${world.capital}</span>
+                                    </div>
+                                    <div class="px-4 py-2.5 flex justify-between">
+                                        <span class="font-bold text-amber-300/90">Sovereign:</span>
+                                        <span class="text-gray-300 text-right">${world.sovereign}</span>
+                                    </div>
+                                    <div class="px-4 py-2.5 flex justify-between">
+                                        <span class="font-bold text-amber-300/90">Inscribed Souls:</span>
+                                        <span class="text-gray-300 text-right">${world.characters.length}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (currentWikiTab === 'characters') {
+                container.innerHTML = `
+                    <div class="border-b border-[#323244] pb-4 mb-6 flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <div class="text-xs font-pixel text-amber-400 mb-1">DRAMATIS PERSONÆ</div>
+                            <h1 class="font-wiki-title text-3xl font-bold text-white">Characters of ${world.name}</h1>
+                        </div>
+                        <button onclick="openNewCharModal()" class="bg-amber-600 hover:bg-amber-500 text-black font-wiki-title font-bold text-xs px-4 py-2.5 rounded shadow transition-colors">
+                            + Inscribe New Soul
+                        </button>
+                    </div>
+
+                    <p class="font-wiki-body italic text-lg text-gray-300 mb-6">
+                        "All the world’s a stage, and all the men and women merely players..."
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        ${world.characters.map(char => `
+                            <div class="bg-[#1a1a24] border border-[#323246] hover:border-amber-500/60 rounded-lg p-5 transition-all flex flex-col justify-between shadow-md">
+                                <div>
+                                    <div class="flex items-start justify-between gap-2 mb-2">
+                                        <h3 class="font-wiki-title text-xl font-bold text-amber-300">${char.name}</h3>
+                                        <span class="text-xs font-pixel px-2 py-1 rounded ${char.status === 'Living' ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-500/40' : 'bg-red-900/50 text-red-300 border border-red-500/40'}">
+                                            ${char.status}
+                                        </span>
+                                    </div>
+                                    <div class="text-sm font-wiki-title text-gray-400 mb-3">
+                                        ${char.house} • <span class="text-amber-200/80">${char.role}</span>
+                                    </div>
+                                    <p class="font-wiki-body text-lg text-gray-200 leading-relaxed">
+                                        ${char.bio}
+                                    </p>
+                                </div>
+                                <div class="mt-4 pt-3 border-t border-[#2a2a3a] flex justify-between items-center text-xs font-wiki-title text-gray-500">
+                                    <span>Soul ID: #${char.id.toUpperCase()}</span>
+                                    <span class="text-amber-400/70">♥ Chronicle Verified</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else if (currentWikiTab === 'genealogy') {
+                container.innerHTML = `
+                    <div class="border-b border-[#323244] pb-4 mb-6">
+                        <div class="text-xs font-pixel text-amber-400 mb-1">LINEAGES &amp; BLOODLINES</div>
+                        <h1 class="font-wiki-title text-3xl font-bold text-white">Albero genealogico</h1>
+                    </div>
+
+                    <p class="font-wiki-body italic text-lg text-gray-300 mb-8">
+                        "Behold the noble boughs and ancient roots whence the rulers of ${world.name} do spring."
+                    </p>
+
+                    <div class="space-y-8">
+                        ${world.genealogy.map(tree => `
+                            <div class="bg-[#191923] border border-[#323246] rounded-lg p-6">
+                                <h3 class="font-wiki-title text-xl font-bold text-amber-400 text-center mb-6 border-b border-[#2e2e3e] pb-3">
+                                    ${tree.house}
+                                </h3>
+
+                                <!-- Visual Family Tree Structure -->
+                                <div class="flex flex-col items-center">
+                                    <!-- Ancestors / Parents -->
+                                    <div class="flex flex-wrap justify-center items-center gap-4">
+                                        <div class="bg-[#232332] border-2 border-amber-500/60 px-4 py-3 rounded text-center min-w-[180px]">
+                                            <div class="text-[10px] font-pixel text-amber-400 mb-1">PROGENITOR</div>
+                                            <div class="font-wiki-title font-bold text-white">${tree.ancestor}</div>
+                                        </div>
+                                        <span class="font-wiki-title text-amber-400 text-xl">⚭</span>
+                                        <div class="bg-[#232332] border-2 border-amber-500/60 px-4 py-3 rounded text-center min-w-[180px]">
+                                            <div class="text-[10px] font-pixel text-amber-400 mb-1">CONSORT</div>
+                                            <div class="font-wiki-title font-bold text-white">${tree.spouse}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Vertical Line Down -->
+                                    <div class="w-0.5 h-8 bg-amber-500/70"></div>
+
+                                    <!-- Horizontal Connector Bar -->
+                                    <div class="w-48 sm:w-64 h-0.5 bg-amber-500/70"></div>
+
+                                    <!-- Descendants -->
+                                    <div class="flex flex-wrap justify-center gap-6 mt-4">
+                                        ${tree.descendants.map(child => `
+                                            <div class="tree-node tree-branch bg-[#13131b] border border-amber-400/50 px-4 py-3 rounded text-center min-w-[170px]">
+                                                <div class="text-[10px] font-pixel text-gray-400 mb-1">HEIR / ISSUE</div>
+                                                <div class="font-wiki-title font-semibold text-amber-200">${child}</div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else if (currentWikiTab === 'relations') {
+                container.innerHTML = `
+                    <div class="border-b border-[#323244] pb-4 mb-6">
+                        <div class="text-xs font-pixel text-amber-400 mb-1">OATHS, BONDS &amp; FEUDS</div>
+                        <h1 class="font-wiki-title text-3xl font-bold text-white">Relazioni</h1>
+                    </div>
+
+                    <p class="font-wiki-body italic text-lg text-gray-300 mb-6">
+                        "Love, treason, fealty, and bitter wrath—the invisible threads binding soul unto soul."
+                    </p>
+
+                    <div class="space-y-4">
+                        ${world.relations.map(rel => `
+                            <div class="bg-[#1a1a24] border border-[#323246] rounded-lg p-5">
+                                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                    <div class="flex flex-wrap items-center gap-3 font-wiki-title text-lg font-bold">
+                                        <span class="text-amber-300">${rel.from}</span>
+                                        <span class="text-xs font-pixel bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded border border-amber-500/40">
+                                            ◄ ${rel.type} ►
+                                        </span>
+                                        <span class="text-amber-300">${rel.to}</span>
+                                    </div>
+                                </div>
+                                <p class="font-wiki-body text-lg text-gray-300 leading-relaxed">
+                                    ${rel.desc}
+                                </p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        }
+
+        /* -------------------------------------------------------------------
+           7. MODALS: FORGE NEW REALM & INSCRIBE NEW CHARACTER
+        ------------------------------------------------------------------- */
+        function openNewWorldModal() {
+            playBlip(580);
+            document.getElementById('new-world-modal').classList.remove('hidden');
+        }
+
+        function closeNewWorldModal() {
+            playBlip(340);
+            document.getElementById('new-world-modal').classList.add('hidden');
+        }
+
+        function createNewWorld() {
+            const nameInput = document.getElementById('new-world-name').value.trim();
+            const mottoInput = document.getElementById('new-world-motto').value.trim();
+            const loreInput = document.getElementById('new-world-lore').value.trim();
+
+            if (!nameInput) {
+                showToast("* Pray speak a name for thy realm!");
+                return;
+            }
+
+            const newId = nameInput.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
+            const newRealm = {
+                id: newId,
+                name: nameInput,
+                motto: mottoInput || 'A newborn star amidst the eternal dark.',
+                era: 'The First Dawn',
+                capital: 'Sanctuary of Beginnings',
+                sovereign: 'Yet Uncrowned',
+                lore: loreInput || 'Lo! From the boundless void, a new realm hath been conjured by the Architect’s will. Its chronicles await the ink of scribes and the deeds of heroes.',
+                geography: [
+                    { name: 'The Whispering Crossing', desc: 'Where travelers first set foot upon this virgin soil.' }
+                ],
+                characters: [
+                    {
+                        id: 'founder-' + Math.floor(Math.random() * 999),
+                        name: 'The First Pilgrim',
+                        house: 'Wanderers of Cladar',
+                        role: 'Herald of the Realm',
+                        status: 'Living',
+                        bio: 'Bearing a single brass lantern, this lone traveler walketh the uncharted paths of ' + nameInput + '.'
+                    }
+                ],
+                genealogy: [
+                    {
+                        house: 'House of the First Dawn',
+                        ancestor: 'The Unnamed Founder',
+                        spouse: 'Lady Fortune',
+                        descendants: ['Heirs Yet Unborn']
+                    }
+                ],
+                relations: [
+                    {
+                        from: 'The First Pilgrim',
+                        to: nameInput,
+                        type: 'Sacred Stewardship',
+                        desc: 'Sworn to safeguard the nascent flame of this newly forged world.'
+                    }
+                ]
+            };
+
+            worldsData.push(newRealm);
+            currentWorldId = newId;
+            populateWorldSelectors();
+
+            // Clear inputs
+            document.getElementById('new-world-name').value = '';
+            document.getElementById('new-world-motto').value = '';
+            document.getElementById('new-world-lore').value = '';
+
+            closeNewWorldModal();
+            playBlip(780);
+            showToast(`* Realm "${nameInput}" hath been forged!`);
+        }
+
+        function openNewCharModal() {
+            playBlip(580);
+            document.getElementById('new-char-modal').classList.remove('hidden');
+        }
+
+        function closeNewCharModal() {
+            playBlip(340);
+            document.getElementById('new-char-modal').classList.add('hidden');
+        }
+
+        function saveNewCharacter() {
+            const name = document.getElementById('char-name').value.trim();
+            const house = document.getElementById('char-house').value.trim() || 'Unaligned';
+            const role = document.getElementById('char-role').value.trim() || 'Wanderer';
+            const bio = document.getElementById('char-bio').value.trim() || 'A mysterious soul whose deeds are yet to be sung.';
+
+            if (!name) {
+                showToast("* Every soul must bear a name!");
+                return;
+            }
+
+            const world = worldsData.find(w => w.id === currentWorldId);
+            if (world) {
+                world.characters.push({
+                    id: 'c' + (world.characters.length + 10),
+                    name,
+                    house,
+                    role,
+                    status: 'Living',
+                    bio
+                });
+            }
+
+            document.getElementById('char-name').value = '';
+            document.getElementById('char-house').value = '';
+            document.getElementById('char-role').value = '';
+            document.getElementById('char-bio').value = '';
+
+            closeNewCharModal();
+            renderWiki();
+            showToast(`* ${name} inscribed into the annals!`);
+        }
+
+        // Boot up selectors on load
+        window.addEventListener('DOMContentLoaded', () => {
+            populateWorldSelectors();
+        });
+    </script>
+</body>
+</html>
