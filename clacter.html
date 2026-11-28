@@ -367,12 +367,16 @@
             </div>
             <select id="wiki-world-switcher" aria-label="Choose a world" onchange="switchWikiWorld(this.value)" class="max-w-[28vw] sm:max-w-52 bg-[#0e0e14] border border-[#3a3a4d] text-gray-200 font-wiki-body text-sm px-2 py-1.5 rounded focus:outline-none focus:border-amber-400"></select>
             <details class="relative shrink-0">
-                <summary aria-label="More options" class="list-none cursor-pointer border border-[#3a3a4d] hover:border-amber-400 text-gray-200 px-2 sm:px-3 py-1.5 rounded font-wiki-body text-sm"><span class="hidden sm:inline">More</span><span class="sm:hidden" aria-hidden="true">•••</span><span aria-hidden="true">⌄</span></summary>
-                <div class="absolute right-0 top-full mt-1 min-w-44 bg-[#181822] border border-[#3a3a4d] rounded shadow-lg p-1 flex flex-col z-50">
-                    <button onclick="exportWorld(); this.closest('details').open=false" class="text-left px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Save a copy (ZIP)</button>
-                    <label class="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Open a world file (ZIP)<input id="world-zip-input" type="file" accept=".zip,application/zip" class="hidden" onchange="importWorldZip(this.files[0]); this.closest('details').open=false"></label>
-                    <label class="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Import a character (ZIP)<input id="character-zip-input" type="file" accept=".zip,application/zip" class="hidden" onchange="importCharacterZip(this.files[0]); this.closest('details').open=false"></label>
-                    <label class="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Import a Google Doc<input id="docs-input" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden" onchange="convertGoogleDoc(this.files[0]); this.closest('details').open=false"></label>
+                <summary aria-label="Import, export, and app options" class="list-none cursor-pointer border border-[#3a3a4d] hover:border-amber-400 text-gray-200 px-2 sm:px-3 py-1.5 rounded font-wiki-body text-sm"><span class="hidden sm:inline">More</span><span class="sm:hidden" aria-hidden="true">•••</span><span aria-hidden="true">⌄</span></summary>
+                <div class="absolute right-0 top-full mt-1 min-w-60 max-h-[80vh] overflow-y-auto bg-[#181822] border border-[#3a3a4d] rounded shadow-lg p-2 flex flex-col z-50">
+                    <p class="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-gray-500">Save or share</p>
+                    <button onclick="exportWorld(); this.closest('details').open=false" class="text-left px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Download whole world (ZIP)</button>
+                    <button onclick="exportOverviewPage(); this.closest('details').open=false" class="text-left px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Download overview page (ZIP)</button>
+                    <p class="px-3 pt-3 pb-1 text-[11px] uppercase tracking-wide text-gray-500">Bring in a file</p>
+                    <label class="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Import whole world (ZIP)<input id="world-zip-input" type="file" accept=".zip,application/zip" class="hidden" onchange="importWorldZip(this.files[0]); this.closest('details').open=false"></label>
+                    <label class="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Import overview page (ZIP)<input id="overview-zip-input" type="file" accept=".zip,application/zip" class="hidden" onchange="importOverviewPageZip(this.files[0]); this.closest('details').open=false"></label>
+                    <label class="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Import character page (ZIP)<input id="character-zip-input" type="file" accept=".zip,application/zip" class="hidden" onchange="importCharacterZip(this.files[0]); this.closest('details').open=false"></label>
+                    <label class="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Import a Google Doc or PDF<input id="docs-input" type="file" accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf" class="hidden" onchange="convertGoogleDoc(this.files[0]); this.closest('details').open=false"></label>
                     <button id="install-app" onclick="installApp(); this.closest('details').open=false" class="hidden text-left px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Add to this device</button>
                 </div>
             </details>
@@ -1176,6 +1180,19 @@
 
         function formatArticleLine(line, characterBySlug, interactive) {
                 let safe = escapeHtml(line);
+                const links = [];
+                safe = safe.replace(/\[((?:\\.|[^\]])+)\]\(([^)\s]+)\)/g, (match, label, escapedUrl) => {
+                    const url = escapedUrl.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+                    if (!isSafeArticleLink(url)) return match;
+                    const external = /^https?:\/\//i.test(url);
+                    const linkText = label.replace(/\\([\\\]])/g, '$1')
+                        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.+?)\*/g, '<em>$1</em>');
+                    links.push(interactive
+                        ? `<a href="${escapeHtml(url)}" class="text-amber-300 underline"${external ? ' target="_blank" rel="noopener noreferrer"' : ''}>${linkText}</a>`
+                        : `<span data-article-link="${escapeHtml(url)}" class="text-amber-300 underline" title="Link: ${escapeHtml(url)}">${linkText}</span>`);
+                    return `\uE000${links.length - 1}\uE001`;
+                });
                 safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>');
                 safe = safe.replace(/@([\p{L}\d_-]+)/gu, (mention, name) => {
                     const character = characterBySlug.get(characterSlug(name.replace(/_/g, ' ')));
@@ -1184,8 +1201,29 @@
                         : `<span class="text-amber-300">@${escapeHtml(name)}</span>`;
                 });
                 const heading = safe.match(/^\s*(#{1,3})\s*(.+?)\s*$/);
-                if (heading) return `<h${heading[1].length}>${heading[2]}</h${heading[1].length}>`;
-                return `<p>${safe}</p>`;
+                const restoreLinks = value => value.replace(/\uE000(\d+)\uE001/g, (token, index) => links[Number(index)] || token);
+                if (heading) return `<h${heading[1].length}>${restoreLinks(heading[2])}</h${heading[1].length}>`;
+                return `<p>${restoreLinks(safe)}</p>`;
+        }
+
+        function isSafeArticleLink(url) {
+            const value = String(url || '').trim();
+            if (/^https?:\/\/\S+$/i.test(value) || /^(mailto|tel):\S+$/i.test(value)) {
+                try {
+                    return ['http:', 'https:', 'mailto:', 'tel:'].includes(new URL(value).protocol);
+                } catch {
+                    return false;
+                }
+            }
+            return /^#[\p{L}\d_.:-]*$/u.test(value);
+        }
+
+        function articleLinkMarkdown(label, url) {
+            const value = String(url || '').trim();
+            if (!isSafeArticleLink(value)) return label;
+            const safeUrl = encodeURI(value).replace(/\(/g, '%28').replace(/\)/g, '%29');
+            const safeLabel = String(label || '').replace(/\s+/g, ' ').trim().replace(/\\/g, '\\\\').replace(/\]/g, '\\]');
+            return `[${safeLabel}](${safeUrl})`;
         }
 
         function renderVisualEditor(world, editorId, markdown) {
@@ -1207,6 +1245,8 @@
             if (node.nodeType !== Node.ELEMENT_NODE) return '';
             const text = [...node.childNodes].map(serializeEditorInline).join('');
             if (node.tagName === 'BR') return '\n';
+            const linkHref = node.dataset?.articleLink || (node.tagName === 'A' ? node.getAttribute('href') : '');
+            if (linkHref) return articleLinkMarkdown(text, linkHref);
             if (node.tagName === 'STRONG' || node.tagName === 'B') return `**${text}**`;
             if (node.tagName === 'EM' || node.tagName === 'I') return `*${text}*`;
             return text;
@@ -1766,50 +1806,159 @@
 
         async function convertGoogleDoc(file) {
             if (!file) return;
-            if (!window.mammoth) {
+            const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+            if (!isPdf && !window.mammoth) {
                 showToast('The Google Docs importer did not load.');
                 return;
             }
             try {
-                const result = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
                 const world = worldsData.find(item => item.id === currentWorldId);
-                const parsed = new DOMParser().parseFromString(result.value, 'text/html');
-                const lines = [];
-                const toMarkdown = async node => {
-                    if (node.nodeType === Node.TEXT_NODE) return node.nodeValue;
-                    if (node.nodeType !== Node.ELEMENT_NODE) return '';
-                    if (node.tagName === 'IMG' && node.src.startsWith('data:')) {
-                        const response = await fetch(node.src);
-                        const filename = await storeWorldImage(world, await response.blob(), `doc-image-${Date.now()}.png`);
-                        return `\n[[image:${filename}|${node.alt || filename}|right]]\n`;
+                let article;
+                let conversionMessages = [];
+                if (isPdf) {
+                    const pdfjsLib = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@6.5.438/legacy/build/pdf.min.mjs');
+                    article = await convertPdfToArticle(file, pdfjsLib);
+                } else {
+                    const result = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
+                    const parsed = new DOMParser().parseFromString(result.value, 'text/html');
+                    const lines = [];
+                    const toMarkdown = async node => {
+                        if (node.nodeType === Node.TEXT_NODE) return node.nodeValue;
+                        if (node.nodeType !== Node.ELEMENT_NODE) return '';
+                        if (node.tagName === 'IMG' && node.src.startsWith('data:')) {
+                            const response = await fetch(node.src);
+                            const filename = await storeWorldImage(world, await response.blob(), `doc-image-${Date.now()}.png`);
+                            return `\n[[image:${filename}|${node.alt || filename}|right]]\n`;
+                        }
+                        const content = [];
+                        for (const child of node.childNodes) content.push(await toMarkdown(child));
+                        const text = content.join('');
+                        if (node.tagName === 'BR') return '\n';
+                        if (node.tagName === 'STRONG' || node.tagName === 'B') return `**${text}**`;
+                        if (node.tagName === 'EM' || node.tagName === 'I') return `*${text}*`;
+                        if (node.tagName === 'A') return articleLinkMarkdown(text, node.getAttribute('href'));
+                        return text;
+                    };
+                    for (const node of parsed.body.children) {
+                        if (/^H[1-3]$/.test(node.tagName)) lines.push(`${'#'.repeat(Number(node.tagName[1]))} ${node.textContent.trim()}`);
+                        else if (node.tagName === 'P') lines.push((await toMarkdown(node)).trim());
+                        else if (node.tagName === 'UL' || node.tagName === 'OL')
+                            for (const item of node.querySelectorAll('li')) lines.push(`- ${(await toMarkdown(item)).trim()}`);
                     }
-                    const content = [];
-                    for (const child of node.childNodes) content.push(await toMarkdown(child));
-                    const text = content.join('');
-                    if (node.tagName === 'BR') return '\n';
-                    if (node.tagName === 'STRONG' || node.tagName === 'B') return `**${text}**`;
-                    if (node.tagName === 'EM' || node.tagName === 'I') return `*${text}*`;
-                    return text;
-                };
-                for (const node of parsed.body.children) {
-                    if (/^H[1-3]$/.test(node.tagName)) lines.push(`${'#'.repeat(Number(node.tagName[1]))} ${node.textContent.trim()}`);
-                    else if (node.tagName === 'P') lines.push((await toMarkdown(node)).trim());
-                    else if (node.tagName === 'UL' || node.tagName === 'OL')
-                        for (const item of node.querySelectorAll('li')) lines.push(`- ${(await toMarkdown(item)).trim()}`);
+                    article = lines.join('\n\n');
+                    conversionMessages = result.messages;
                 }
-                world.article = lines.join('\n\n');
+                if (!article.trim()) {
+                    document.getElementById('docs-input').value = '';
+                    showToast(isPdf
+                        ? 'No selectable text was found. If this is a scan, run OCR first and import the recognized text.'
+                        : 'No readable text was found in this document.');
+                    return;
+                }
+                world.article = article;
                 await saveWorld(world);
                 document.getElementById('docs-input').value = '';
                 currentArticleKey = 'world';
                 currentWikiTab = 'articles';
                 articleEditing = false;
                 setWikiTab('articles');
-                showToast('Your document was added to the page.');
-                if (result.messages.length) console.warn('Document conversion notes:', result.messages);
+                showToast(isPdf
+                    ? 'PDF text and headings were added to the page. Use DOCX to keep pictures.'
+                    : 'Your document was added to the page.');
+                if (conversionMessages.length) console.warn('Document conversion notes:', conversionMessages);
             } catch (error) {
                 console.error('Could not convert document:', error);
-                showToast('Could not open this document.');
+                document.getElementById('docs-input').value = '';
+                showToast(isPdf
+                    ? 'Could not open this PDF. Check the file and your connection, then try again.'
+                    : 'Could not open this document.');
             }
+        }
+
+        async function convertPdfToArticle(file, pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.5.438/legacy/build/pdf.worker.min.mjs';
+            const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+            const pages = [];
+            for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+                const page = await pdf.getPage(pageNumber);
+                const [content, annotations] = await Promise.all([page.getTextContent(), page.getAnnotations()]);
+                const linksByItem = new Map();
+                for (const annotation of annotations) {
+                    if (annotation.subtype !== 'Link') continue;
+                    const url = annotation.url || annotation.unsafeUrl;
+                    if (!isSafeArticleLink(url)) continue;
+                    const [left, bottom, right, top] = annotation.rect || [];
+                    if (![left, bottom, right, top].every(Number.isFinite)) continue;
+                    content.items.forEach((item, index) => {
+                        if (typeof item.str !== 'string' || !item.str.trim()) return;
+                        const transform = item.transform || [];
+                        const x = transform[4] || 0;
+                        const y = transform[5] || 0;
+                        const width = item.width || 0;
+                        if (y < bottom - 2 || y > top + 2 || width <= 0) return;
+                        const overlap = Math.min(x + width, right) - Math.max(x, left);
+                        const coverage = overlap / width;
+                        if (coverage < 0.6 || coverage <= (linksByItem.get(index)?.coverage || 0)) return;
+                        linksByItem.set(index, { url, coverage });
+                    });
+                }
+                let line = null;
+                const lines = [];
+                const finishLine = () => {
+                    if (line?.text.trim()) lines.push(line);
+                    line = null;
+                };
+                for (const [index, item] of content.items.entries()) {
+                    if (typeof item.str !== 'string' || !item.str.trim()) continue;
+                    const transform = item.transform || [];
+                    const x = transform[4] || 0;
+                    const y = transform[5] || 0;
+                    const fontSize = Math.max(item.height || 0, Math.hypot(transform[2] || 0, transform[3] || 0)) || 12;
+                    if (line && Math.abs(y - line.y) > Math.max(2, Math.min(fontSize, line.fontSize) * 0.35)) finishLine();
+                    if (!line) line = { text: '', y, fontSize, right: x };
+                    const gap = x - line.right;
+                    if (line.text && gap > fontSize * 0.18 && !/\s$/.test(line.text)) line.text += ' ';
+                    line.text += linksByItem.has(index)
+                        ? articleLinkMarkdown(item.str, linksByItem.get(index).url)
+                        : item.str;
+                    line.right = x + (item.width || 0);
+                    line.fontSize = Math.max(line.fontSize, fontSize);
+                    if (item.hasEOL) finishLine();
+                }
+                finishLine();
+                pages.push(lines);
+            }
+
+            const allLines = pages.flat();
+            if (!allLines.length) return '';
+            const fontSizes = allLines.map(item => item.fontSize).sort((a, b) => a - b);
+            const bodyFontSize = fontSizes[Math.floor(fontSizes.length / 2)];
+            const articleLines = [];
+            for (const pageLines of pages) {
+                let paragraph = '';
+                let previousLine = null;
+                const finishParagraph = () => {
+                    if (paragraph) articleLines.push(paragraph);
+                    paragraph = '';
+                };
+                for (const item of pageLines) {
+                    const text = item.text.trim();
+                    const headingLevel = item.fontSize >= bodyFontSize * 1.6 ? 1
+                        : item.fontSize >= bodyFontSize * 1.28 && text.length <= 120 ? 2
+                            : item.fontSize >= bodyFontSize * 1.12 && text.length <= 80 ? 3 : 0;
+                    if (headingLevel) {
+                        finishParagraph();
+                        articleLines.push(`${'#'.repeat(headingLevel)} ${text}`);
+                    } else {
+                        const verticalGap = previousLine ? Math.abs(previousLine.y - item.y) : 0;
+                        if (paragraph && verticalGap > Math.max(10, bodyFontSize * 1.7)) finishParagraph();
+                        paragraph = paragraph ? `${paragraph} ${text}` : text;
+                    }
+                    previousLine = item;
+                }
+                finishParagraph();
+            }
+            return articleLines.join('\n\n');
         }
 
         /* -------------------------------------------------------------------
@@ -1947,7 +2096,7 @@
                 : `<div class="flex flex-wrap items-start justify-between gap-4 border-b border-[#323244] pb-4 mb-6">
                        <div><button onclick="setWikiTab('characters')" class="text-sm text-amber-300 underline mb-3">← Back to people</button><div class="text-xs text-amber-400 mb-1">CHARACTER</div><h1 class="font-wiki-title text-3xl font-bold text-white">${escapeHtml(character.name)}</h1><p class="text-gray-400 mt-1">${escapeHtml(character.role || '')}</p></div>
                        <div class="flex flex-wrap gap-2">
-                           <button onclick="exportCharacter('${escapeHtml(character.id)}')" aria-label="Download character as ZIP" title="Download this person and their pictures" class="px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Download character</button>
+                           <button onclick="exportCharacter('${escapeHtml(character.id)}')" aria-label="Download character page as ZIP" title="Download this page, its details, and its pictures" class="px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Download character page</button>
                            <button onclick="editArticle()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Edit page</button>
                        </div>
                    </div>
@@ -2023,7 +2172,10 @@
                             <div class="text-xs font-pixel text-amber-400 mb-1">WORLD OVERVIEW</div>
                             <h1 class="font-wiki-title text-3xl sm:text-4xl font-bold text-white">${escapeHtml(world.name)}</h1>
                         </div>
-                        <button onclick="editWorldOverview()" class="px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Edit page</button>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="exportOverviewPage()" class="px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Download page</button>
+                            <button onclick="editWorldOverview()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Edit page</button>
+                        </div>
                     </div>
 
                     <!-- Fandom Infobox + Main Lore Grid -->
@@ -2315,11 +2467,15 @@
             showToast(`Added ${name}.`);
         }
 
-        function getCharacterImageReferences(character) {
-            const text = `${character.article || ''}\n${character.bio || ''}`;
+        function getArticleImageReferences(...articles) {
+            const text = articles.filter(article => typeof article === 'string').join('\n');
             return [...new Set([...text.matchAll(/\[\[image:([^|\]]+)/gi)]
                 .map(match => match[1].trim())
                 .filter(Boolean))];
+        }
+
+        function getCharacterImageReferences(character) {
+            return getArticleImageReferences(character.article, character.bio);
         }
 
         function uniqueImportedCharacterName(world, originalName) {
@@ -2340,11 +2496,15 @@
             );
         }
 
-        function replaceCharacterImageReferences(text, filenames) {
+        function replaceArticleImageReferences(text, filenames) {
             return String(text || '').replace(/\[\[image:([^|\]]+)/gi, (reference, filename) => {
                 const replacement = filenames.get(filename.trim());
                 return replacement ? `[[image:${replacement}` : reference;
             });
+        }
+
+        function replaceCharacterImageReferences(text, filenames) {
+            return replaceArticleImageReferences(text, filenames);
         }
 
         async function storeCharacterArchiveImage(world, entry, preferredName) {
@@ -2399,6 +2559,38 @@
             db.close();
         }
 
+        function safeArchiveName(value, fallback) {
+            return String(value || '').replace(/[^a-z0-9-_ ]/gi, '').trim() || fallback;
+        }
+
+        async function createZipWriter(filename, totalBytes) {
+            if (totalBytes > 1024 ** 3 && !window.showSaveFilePicker) {
+                throw new Error('Large archives need a browser that can save large files.');
+            }
+            let writer;
+            if (window.showSaveFilePicker) {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: filename,
+                    types: [{ description: 'ZIP archive', accept: { 'application/zip': ['.zip'] } }]
+                });
+                writer = new zip.WritableWriter(await handle.createWritable());
+            } else {
+                writer = new zip.BlobWriter('application/zip');
+            }
+            return new zip.ZipWriter(writer, { zip64: true });
+        }
+
+        async function downloadZipWriter(zipWriter, filename) {
+            const result = await zipWriter.close();
+            if (result instanceof Blob) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(result);
+                link.download = filename;
+                link.click();
+                setTimeout(() => URL.revokeObjectURL(link.href), 60000);
+            }
+        }
+
         async function exportCharacter(characterId) {
             const world = worldsData.find(item => item.id === currentWorldId);
             const character = world?.characters.find(item => item.id === characterId);
@@ -2419,21 +2611,8 @@
                     return image;
                 });
                 const totalBytes = images.reduce((sum, image) => sum + image.size, 0);
-                if (totalBytes > 1024 ** 3 && !window.showSaveFilePicker) {
-                    throw new Error('Large character archives need a browser that can save large files.');
-                }
-                const baseName = character.name.replace(/[^a-z0-9-_ ]/gi, '').trim() || 'character';
-                let writer;
-                if (window.showSaveFilePicker) {
-                    const handle = await window.showSaveFilePicker({
-                        suggestedName: `${baseName}.zip`,
-                        types: [{ description: 'ZIP archive', accept: { 'application/zip': ['.zip'] } }]
-                    });
-                    writer = new zip.WritableWriter(await handle.createWritable());
-                } else {
-                    writer = new zip.BlobWriter('application/zip');
-                }
-                zipWriter = new zip.ZipWriter(writer, { zip64: true });
+                const baseName = safeArchiveName(character.name, 'character');
+                zipWriter = await createZipWriter(`${baseName}.zip`, totalBytes);
                 const portableCharacter = JSON.parse(JSON.stringify(character));
                 const manifest = JSON.stringify({
                     format: 'clacter-character',
@@ -2447,18 +2626,62 @@
                     if (!blob) throw new Error(`The picture ${image.filename} could not be read.`);
                     await zipWriter.add(`images/${image.filename}`, new zip.BlobReader(blob), { level: 0 });
                 }
-                const result = await zipWriter.close();
-                if (result instanceof Blob) {
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(result);
-                    link.download = `${baseName}.zip`;
-                    link.click();
-                    setTimeout(() => URL.revokeObjectURL(link.href), 60000);
-                }
+                await downloadZipWriter(zipWriter, `${baseName}.zip`);
                 showToast(`Downloaded ${character.name}.`);
             } catch (error) {
                 console.error('Character export failed:', error);
                 showToast(`Could not download this character: ${error.message}`);
+            }
+        }
+
+        async function exportOverviewPage() {
+            const world = worldsData.find(item => item.id === currentWorldId);
+            if (!world) {
+                showToast('Could not find this world.');
+                return;
+            }
+            if (!window.zip) {
+                showToast('The ZIP tool did not load.');
+                return;
+            }
+            let zipWriter;
+            try {
+                const article = world.article || world.lore || '';
+                const filenames = getArticleImageReferences(article);
+                const images = filenames.map(filename => {
+                    const image = (world.images || []).find(item => item.filename === filename);
+                    if (!image) throw new Error(`The picture ${filename} is missing from this world.`);
+                    return image;
+                });
+                const page = {
+                    name: world.name,
+                    motto: world.motto || '',
+                    era: world.era || '',
+                    capital: world.capital || '',
+                    sovereign: world.sovereign || '',
+                    article,
+                    geography: Array.isArray(world.geography) ? world.geography : []
+                };
+                const archiveName = `${safeArchiveName(world.name, 'clacter-world')}-overview.zip`;
+                zipWriter = await createZipWriter(archiveName, images.reduce((sum, image) => sum + image.size, 0));
+                const manifest = JSON.stringify({
+                    format: 'clacter-page',
+                    version: 1,
+                    pageType: 'overview',
+                    page,
+                    images: images.map(({ filename, size, type }) => ({ filename, size, type }))
+                }, null, 2);
+                await zipWriter.add('page.json', new zip.TextReader(manifest));
+                for (const image of images) {
+                    const blob = await readWorldImage(world, image.filename);
+                    if (!blob) throw new Error(`The picture ${image.filename} could not be read.`);
+                    await zipWriter.add(`images/${image.filename}`, new zip.BlobReader(blob), { level: 0 });
+                }
+                await downloadZipWriter(zipWriter, archiveName);
+                showToast('Downloaded the overview page.');
+            } catch (error) {
+                console.error('Overview export failed:', error);
+                showToast(`Could not download this page: ${error.message}`);
             }
         }
 
@@ -2567,29 +2790,123 @@
             }
         }
 
+        async function importOverviewPageZip(file) {
+            if (!file) return;
+            if (!window.zip) {
+                showToast('The ZIP tool did not load.');
+                return;
+            }
+            const world = worldsData.find(item => item.id === currentWorldId);
+            if (!world) {
+                showToast('Choose a world before importing a page.');
+                return;
+            }
+            let reader;
+            const previousImages = [...(world.images || [])];
+            const importedImages = [];
+            const fields = ['name', 'motto', 'era', 'capital', 'sovereign', 'article', 'lore', 'geography'];
+            const previousPage = Object.fromEntries(fields.map(key => [key, world[key]]));
+            let pageChanged = false;
+            try {
+                reader = new zip.ZipReader(new zip.BlobReader(file));
+                const entries = await reader.getEntries();
+                const pageEntry = entries.find(entry => entry.filename.toLowerCase() === 'page.json');
+                if (!pageEntry) throw new Error('This ZIP does not contain page.json.');
+                const data = JSON.parse(await pageEntry.getData(new zip.TextWriter()));
+                const page = data?.page;
+                if (data?.format !== 'clacter-page' || data?.version !== 1 || data?.pageType !== 'overview'
+                    || !page || typeof page !== 'object' || Array.isArray(page)
+                    || typeof page.name !== 'string' || !page.name.trim() || typeof page.article !== 'string') {
+                    throw new Error('This ZIP does not contain a valid overview page.');
+                }
+                const archiveImages = new Map();
+                for (const entry of entries) {
+                    if (!entry.filename.startsWith('images/')) continue;
+                    const filename = entry.filename.slice('images/'.length).split('/').pop();
+                    if (!filename || filename === '.' || filename === '..') continue;
+                    if (archiveImages.has(filename)) throw new Error(`The ZIP contains two pictures named ${filename}.`);
+                    archiveImages.set(filename, entry);
+                }
+                const imageReferences = getArticleImageReferences(page.article);
+                for (const filename of imageReferences) {
+                    if (!archiveImages.has(filename)) throw new Error(`The ZIP is missing the picture ${filename}.`);
+                }
+                if (!window.confirm(`Replace ${world.name}'s overview with this page? The people will stay as they are.`)) {
+                    await reader.close();
+                    reader = null;
+                    document.getElementById('overview-zip-input').value = '';
+                    return;
+                }
+
+                const importedFilenames = new Map();
+                for (const filename of imageReferences) {
+                    const image = await storeCharacterArchiveImage(world, archiveImages.get(filename), filename);
+                    importedImages.push(image);
+                    importedFilenames.set(filename, image.filename);
+                }
+                const article = replaceArticleImageReferences(page.article, importedFilenames);
+                await reader.close();
+                reader = null;
+                pageChanged = true;
+                world.name = page.name.trim();
+                world.motto = typeof page.motto === 'string' ? page.motto : '';
+                world.era = typeof page.era === 'string' ? page.era : '';
+                world.capital = typeof page.capital === 'string' ? page.capital : '';
+                world.sovereign = typeof page.sovereign === 'string' ? page.sovereign : '';
+                world.article = article;
+                world.lore = article;
+                world.geography = Array.isArray(page.geography)
+                    ? page.geography.filter(place => place && typeof place === 'object').map(place => ({
+                        name: typeof place.name === 'string' ? place.name : '',
+                        desc: typeof place.desc === 'string' ? place.desc : ''
+                    }))
+                    : [];
+                await saveWorld(world);
+                currentArticleKey = 'world';
+                currentWikiTab = 'world';
+                articleEditing = false;
+                overviewEditing = false;
+                pageEditingKey = null;
+                populateWorldSelectors();
+                document.getElementById('wiki-world-switcher').value = world.id;
+                renderWiki();
+                document.getElementById('overview-zip-input').value = '';
+                showToast('Overview page imported. Your people were not changed.');
+            } catch (error) {
+                if (importedImages.length || pageChanged) {
+                    Object.assign(world, previousPage);
+                    world.images = previousImages;
+                    for (const image of importedImages) {
+                        try {
+                            await removeStoredWorldImage(image);
+                        } catch (cleanupError) {
+                            console.error(`Could not remove imported picture ${image.filename}:`, cleanupError);
+                        }
+                    }
+                    try {
+                        await saveWorld(world);
+                    } catch (saveError) {
+                        console.error('Could not restore the world after a failed page import:', saveError);
+                    }
+                }
+                if (reader) await reader.close().catch(closeError => console.error('Could not close page archive:', closeError));
+                console.error('Overview import failed:', error);
+                document.getElementById('overview-zip-input').value = '';
+                showToast(`Could not import this page: ${error.message}`);
+            }
+        }
+
         async function exportWorld() {
             const world = worldsData.find(item => item.id === currentWorldId);
             if (!window.zip) {
                 showToast('The ZIP tool did not load.');
                 return;
             }
-            let writer;
             let zipWriter;
             try {
                 const totalBytes = (world.images || []).reduce((sum, image) => sum + image.size, 0);
-                if (totalBytes > 1024 ** 3 && !window.showSaveFilePicker) {
-                    throw new Error('Large archives require a browser with streaming file-save support.');
-                }
-                if (window.showSaveFilePicker) {
-                    const handle = await window.showSaveFilePicker({
-                        suggestedName: `${world.name.replace(/[^a-z0-9-_ ]/gi, '').trim() || 'clacter-world'}.zip`,
-                        types: [{ description: 'ZIP archive', accept: { 'application/zip': ['.zip'] } }]
-                    });
-                    writer = new zip.WritableWriter(await handle.createWritable());
-                } else {
-                    writer = new zip.BlobWriter('application/zip');
-                }
-                zipWriter = new zip.ZipWriter(writer, { zip64: true });
+                const archiveName = `${safeArchiveName(world.name, 'clacter-world')}.zip`;
+                zipWriter = await createZipWriter(archiveName, totalBytes);
                 const portableWorld = JSON.parse(JSON.stringify(world));
                 portableWorld.images = (world.images || []).map(({ filename, size, type }) => ({ filename, size, type }));
                 const manifest = JSON.stringify({ format: 'clacter-world', version: 1, world: portableWorld }, null, 2);
@@ -2599,15 +2916,8 @@
                     if (!blob) throw new Error(`Missing image data: ${image.filename}`);
                     await zipWriter.add(`images/${image.filename}`, new zip.BlobReader(blob), { level: 0 });
                 }
-                const result = await zipWriter.close();
-                if (result instanceof Blob) {
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(result);
-                    link.download = `${world.name.replace(/[^a-z0-9-_ ]/gi, '').trim() || 'clacter-world'}.zip`;
-                    link.click();
-                    setTimeout(() => URL.revokeObjectURL(link.href), 60000);
-                }
-                showToast('Your world was saved in a ZIP file.');
+                await downloadZipWriter(zipWriter, archiveName);
+                showToast('Downloaded the whole world.');
             } catch (error) {
                 console.error('World export failed:', error);
                 showToast(`* Export failed: ${error.message}`);
