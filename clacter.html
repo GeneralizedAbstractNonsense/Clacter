@@ -316,7 +316,7 @@
             <div class="flex items-start gap-3 mb-6 min-h-[56px]">
                 <span class="font-pixel text-lg sm:text-xl text-white mt-1">*</span>
                 <p id="landing-dialogue" class="font-vt text-2xl sm:text-3xl leading-snug text-white">
-                    Hark, O Weaver of Fate! Choose thy realm to peruse its sacred tomes, or conjure a new cosmos from the void.
+                    Choose a world to explore. Open it to read, or press “Edit” to change a page.
                 </p>
             </div>
 
@@ -324,17 +324,15 @@
             <div class="space-y-4">
                 <div class="flex flex-col sm:flex-row gap-3">
                     <div class="relative flex-1">
-                        <label for="world-select" class="block font-pixel text-[10px] text-yellow-300 mb-2">
-                            SELECT THY REALM:
-                        </label>
+                        <label for="world-select" class="block font-pixel text-[10px] text-yellow-300 mb-2">CHOOSE A WORLD</label>
                         <select id="world-select" onchange="playBlip(520)" class="w-full bg-black border-2 border-white text-white font-vt text-2xl px-3 py-2.5 focus:outline-none focus:border-yellow-300 cursor-pointer">
                             <!-- Populated via JS -->
                         </select>
                     </div>
 
                     <div class="flex items-end">
-                        <button onclick="enterSelectedWorld()" onmouseenter="playBlip(440)" class="ut-btn w-full sm:w-auto font-pixel text-xs sm:text-sm px-5 py-3.5 flex items-center justify-center">
-                            <span class="ut-sun" aria-hidden="true"><svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#ff9800" d="M7 0h2v3H7zM7 13h2v3H7zM0 7h3v2H0zM13 7h3v2h-3zM2 2h3v3H2zM11 2h3v3h-3zM2 11h3v3H2zM11 11h3v3h-3z"/><path fill="#ffca28" d="M4 4h8v8H4z"/><path fill="#fff176" d="M5 5h6v6H5z"/><path fill="#fffde7" d="M7 6h2v4H7z"/></svg></span> ENTER REALM
+                        <button onclick="enterSelectedWorld()" onmouseenter="playBlip(440)" class="ut-btn w-full sm:w-auto font-vt text-2xl px-5 py-3.5 flex items-center justify-center">
+                            <span class="ut-sun" aria-hidden="true"><svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#ff9800" d="M7 0h2v3H7zM7 13h2v3H7zM0 7h3v2H0zM13 7h3v2h-3zM2 2h3v3H2zM11 2h3v3h-3zM2 11h3v3H2zM11 11h3v3h-3z"/><path fill="#ffca28" d="M4 4h8v8H4z"/><path fill="#fff176" d="M5 5h6v6H5z"/><path fill="#fffde7" d="M7 6h2v4H7z"/></svg></span> OPEN WORLD
                         </button>
                     </div>
                 </div>
@@ -344,11 +342,9 @@
 
                 <!-- Forge New World Button -->
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <span class="font-vt text-xl text-gray-400">
-                        * Dost thou wish to birth a new universe?
-                    </span>
-                    <button onclick="openNewWorldModal()" onmouseenter="playBlip(440)" class="ut-btn font-pixel text-xs px-4 py-3 flex items-center">
-                        <span class="ut-sun" aria-hidden="true"><svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#ff9800" d="M7 0h2v3H7zM7 13h2v3H7zM0 7h3v2H0zM13 7h3v2h-3zM2 2h3v3H2zM11 2h3v3h-3zM2 11h3v3H2zM11 11h3v3h-3z"/><path fill="#ffca28" d="M4 4h8v8H4z"/><path fill="#fff176" d="M5 5h6v6H5z"/><path fill="#fffde7" d="M7 6h2v4H7z"/></svg></span> + FORGE NEW REALM
+                    <span class="font-vt text-xl text-gray-400">Want to make a new world?</span>
+                    <button onclick="openNewWorldModal()" onmouseenter="playBlip(440)" class="ut-btn font-vt text-xl px-4 py-3 flex items-center">
+                        <span class="ut-sun" aria-hidden="true"><svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#ff9800" d="M7 0h2v3H7zM7 13h2v3H7zM0 7h3v2H0zM13 7h3v2h-3zM2 2h3v3H2zM11 2h3v3h-3zM2 11h3v3H2zM11 11h3v3h-3z"/><path fill="#ffca28" d="M4 4h8v8H4z"/><path fill="#fff176" d="M5 5h6v6H5z"/><path fill="#fffde7" d="M7 6h2v4H7z"/></svg></span> CREATE WORLD
                     </button>
                 </div>
             </div>
@@ -368,14 +364,14 @@
                 <h2 id="wiki-world-title" class="font-wiki-title text-base sm:text-lg font-bold text-amber-300 truncate">FRANCE IN REVOLUTION</h2>
                 <p id="wiki-world-subtitle" class="hidden"></p>
             </div>
-            <select id="wiki-world-switcher" aria-label="Choose realm" onchange="switchWikiWorld(this.value)" class="max-w-[28vw] sm:max-w-52 bg-[#0e0e14] border border-[#3a3a4d] text-gray-200 font-wiki-body text-sm px-2 py-1.5 rounded focus:outline-none focus:border-amber-400"></select>
+            <select id="wiki-world-switcher" aria-label="Choose a world" onchange="switchWikiWorld(this.value)" class="max-w-[28vw] sm:max-w-52 bg-[#0e0e14] border border-[#3a3a4d] text-gray-200 font-wiki-body text-sm px-2 py-1.5 rounded focus:outline-none focus:border-amber-400"></select>
             <details class="relative shrink-0">
-                <summary aria-label="Tools" class="list-none cursor-pointer border border-[#3a3a4d] hover:border-amber-400 text-gray-200 px-2 sm:px-3 py-1.5 rounded font-wiki-body text-sm"><span class="hidden sm:inline">Tools</span><span class="sm:hidden" aria-hidden="true">•••</span><span aria-hidden="true">⌄</span></summary>
+                <summary aria-label="More options" class="list-none cursor-pointer border border-[#3a3a4d] hover:border-amber-400 text-gray-200 px-2 sm:px-3 py-1.5 rounded font-wiki-body text-sm"><span class="hidden sm:inline">More</span><span class="sm:hidden" aria-hidden="true">•••</span><span aria-hidden="true">⌄</span></summary>
                 <div class="absolute right-0 top-full mt-1 min-w-44 bg-[#181822] border border-[#3a3a4d] rounded shadow-lg p-1 flex flex-col z-50">
-                    <button onclick="exportWorld(); this.closest('details').open=false" class="text-left px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Export realm (.zip)</button>
-                    <label class="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Import realm (.zip)<input id="world-zip-input" type="file" accept=".zip,application/zip" class="hidden" onchange="importWorldZip(this.files[0]); this.closest('details').open=false"></label>
-                    <label class="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Import Google Docs (.docx)<input id="docs-input" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden" onchange="convertGoogleDoc(this.files[0]); this.closest('details').open=false"></label>
-                    <button id="install-app" onclick="installApp(); this.closest('details').open=false" class="hidden text-left px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Install app</button>
+                    <button onclick="exportWorld(); this.closest('details').open=false" class="text-left px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Save a copy (ZIP)</button>
+                    <label class="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Open a world file (ZIP)<input id="world-zip-input" type="file" accept=".zip,application/zip" class="hidden" onchange="importWorldZip(this.files[0]); this.closest('details').open=false"></label>
+                    <label class="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Import a Google Doc<input id="docs-input" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden" onchange="convertGoogleDoc(this.files[0]); this.closest('details').open=false"></label>
+                    <button id="install-app" onclick="installApp(); this.closest('details').open=false" class="hidden text-left px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Add to this device</button>
                 </div>
             </details>
         </header>
@@ -385,15 +381,14 @@
 
             <!-- LEFT SIDEBAR -->
             <aside class="w-full md:w-48 bg-[#16161f] border-b md:border-b-0 md:border-r border-[#2e2e3e] p-3 shrink-0">
-                <div class="text-xs text-gray-400 uppercase tracking-wide mb-2 px-3">Contents</div>
+                <div class="text-xs text-gray-400 uppercase tracking-wide mb-2 px-3">Pages</div>
                 <nav class="flex md:flex-col gap-1 overflow-x-auto pb-1 md:pb-0">
-                    <button onclick="setWikiTab('world')" id="tab-world" class="wiki-nav-btn active border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300">World</button>
-                    <button onclick="setWikiTab('characters')" id="tab-characters" class="wiki-nav-btn border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300 hover:bg-[#222230]">Characters</button>
-                    <button onclick="setWikiTab('articles')" id="tab-articles" class="wiki-nav-btn border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300 hover:bg-[#222230]">Character article</button>
+                    <button onclick="setWikiTab('world')" id="tab-world" class="wiki-nav-btn active border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300">Overview</button>
+                    <button onclick="setWikiTab('characters')" id="tab-characters" class="wiki-nav-btn border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300 hover:bg-[#222230]">People</button>
                 </nav>
 
                 <details class="mt-3 px-3 text-sm text-gray-400">
-                    <summary class="cursor-pointer rounded py-2 hover:text-gray-200">Relationships</summary>
+                    <summary class="cursor-pointer rounded py-2 hover:text-gray-200">Family and links</summary>
                     <nav class="mt-1 flex flex-col gap-1 pl-2">
                         <button onclick="setWikiTab('genealogy')" id="tab-genealogy" class="wiki-nav-btn border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r text-gray-300 hover:bg-[#222230]">Family tree</button>
                         <button onclick="setWikiTab('relations')" id="tab-relations" class="wiki-nav-btn border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r text-gray-300 hover:bg-[#222230]">Relations</button>
@@ -425,34 +420,30 @@
     ====================================================================== -->
     <div id="new-world-modal" class="hidden fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4">
         <div class="ut-box w-full max-w-lg p-6">
-            <h3 class="font-pixel text-base sm:text-lg text-yellow-300 mb-4">
-                * CONJURE A NEW REALM
-            </h3>
-            <p class="font-vt text-xl text-gray-300 mb-4">
-                Speak the true name of thy creation, O Architect of Worlds:
-            </p>
+            <h3 class="font-wiki-title text-2xl text-yellow-300 mb-4">Create a world</h3>
+            <p class="font-vt text-xl text-gray-300 mb-4">Give your world a name. You can fill in the other parts later.</p>
 
             <div class="space-y-4">
                 <div>
-                    <label class="block font-pixel text-[10px] text-white mb-1">REALM NAME:</label>
-                    <input id="new-world-name" type="text" placeholder="e.g. Vale of Silver Tears" class="w-full bg-black border-2 border-white text-white font-vt text-2xl px-3 py-2 focus:outline-none focus:border-yellow-300">
+                    <label class="block font-vt text-xl text-white mb-1">World name (required)</label>
+                    <input id="new-world-name" type="text" placeholder="e.g. Moon Kingdom" class="w-full bg-black border-2 border-white text-white font-vt text-2xl px-3 py-2 focus:outline-none focus:border-yellow-300">
                 </div>
                 <div>
-                    <label class="block font-pixel text-[10px] text-white mb-1">EPITHET / MOTTO:</label>
-                    <input id="new-world-motto" type="text" placeholder="e.g. Where starlight never fades" class="w-full bg-black border-2 border-white text-white font-vt text-2xl px-3 py-2 focus:outline-none focus:border-yellow-300">
+                    <label class="block font-vt text-xl text-white mb-1">Short saying (optional)</label>
+                    <input id="new-world-motto" type="text" placeholder="e.g. Be kind" class="w-full bg-black border-2 border-white text-white font-vt text-2xl px-3 py-2 focus:outline-none focus:border-yellow-300">
                 </div>
                 <div>
-                    <label class="block font-pixel text-[10px] text-white mb-1">GENESIS LORE (SHAKESPEAREAN PROSE):</label>
-                    <textarea id="new-world-lore" rows="3" placeholder="In the dawn of ages, ere the first moon rose..." class="w-full bg-black border-2 border-white text-white font-vt text-xl px-3 py-2 focus:outline-none focus:border-yellow-300"></textarea>
+                    <label class="block font-vt text-xl text-white mb-1">World story (optional)</label>
+                    <textarea id="new-world-lore" rows="3" placeholder="What is special about your world?" class="w-full bg-black border-2 border-white text-white font-vt text-xl px-3 py-2 focus:outline-none focus:border-yellow-300"></textarea>
                 </div>
             </div>
 
             <div class="flex justify-end gap-3 mt-6">
-                <button onclick="closeNewWorldModal()" class="ut-btn font-pixel text-xs px-4 py-2.5">
-                    CANCEL
+                <button onclick="closeNewWorldModal()" class="ut-btn font-vt text-xl px-4 py-2.5">
+                    Cancel
                 </button>
-                <button onclick="createNewWorld()" class="ut-btn font-pixel text-xs px-4 py-2.5 border-yellow-300 text-yellow-300">
-                    BIRTH REALM
+                <button onclick="createNewWorld()" class="ut-btn font-vt text-xl px-4 py-2.5 border-yellow-300 text-yellow-300">
+                    Create world
                 </button>
             </div>
         </div>
@@ -463,26 +454,22 @@
     ====================================================================== -->
     <div id="new-char-modal" class="hidden fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4">
         <div class="bg-[#1b1b26] border-2 border-amber-500 rounded-lg w-full max-w-lg p-6 text-gray-100 shadow-2xl">
-            <h3 id="char-modal-title" class="font-wiki-title text-xl font-bold text-amber-400 mb-2">
-                Inscribe a New Character
-            </h3>
-            <p class="font-wiki-body italic text-gray-300 mb-4">
-                Chronicle a hero, monarch, or villain into the annals of this realm.
-            </p>
+            <h3 id="char-modal-title" class="font-wiki-title text-xl font-bold text-amber-400 mb-2">Add a character</h3>
+            <p class="font-wiki-body text-gray-300 mb-4">Start with a name. You can add the other details now or later.</p>
 
             <div class="space-y-3 font-wiki-body text-lg">
                 <div>
-                    <label class="block text-sm font-wiki-title text-amber-300">Name &amp; Title</label>
-                    <input id="char-name" type="text" placeholder="e.g. Lady Isolde of Moor" class="w-full bg-[#111118] border border-[#3a3a4d] rounded px-3 py-1.5 text-white focus:border-amber-400 focus:outline-none">
+                    <label class="block text-sm font-wiki-title text-amber-300">Name (required)</label>
+                    <input id="char-name" type="text" placeholder="e.g. Alex the Brave" class="w-full bg-[#111118] border border-[#3a3a4d] rounded px-3 py-1.5 text-white focus:border-amber-400 focus:outline-none">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-sm font-wiki-title text-amber-300">Noble House / Lineage</label>
-                        <input id="char-house" type="text" placeholder="e.g. House Vane" class="w-full bg-[#111118] border border-[#3a3a4d] rounded px-3 py-1.5 text-white focus:border-amber-400 focus:outline-none">
+                        <label class="block text-sm font-wiki-title text-amber-300">Family (optional)</label>
+                        <input id="char-house" type="text" placeholder="e.g. Moon family" class="w-full bg-[#111118] border border-[#3a3a4d] rounded px-3 py-1.5 text-white focus:border-amber-400 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-wiki-title text-amber-300">Epithet / Role</label>
-                        <input id="char-role" type="text" placeholder="e.g. Keeper of Lanterns" class="w-full bg-[#111118] border border-[#3a3a4d] rounded px-3 py-1.5 text-white focus:border-amber-400 focus:outline-none">
+                        <label class="block text-sm font-wiki-title text-amber-300">Role (optional)</label>
+                        <input id="char-role" type="text" placeholder="e.g. baker" class="w-full bg-[#111118] border border-[#3a3a4d] rounded px-3 py-1.5 text-white focus:border-amber-400 focus:outline-none">
                     </div>
                 </div>
                 <div>
@@ -492,31 +479,31 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-wiki-title text-amber-300">Mortal Chronicle (Bio)</label>
-                    <textarea id="char-bio" rows="3" placeholder="Born beneath a weeping comet, she swore..." class="w-full bg-[#111118] border border-[#3a3a4d] rounded px-3 py-1.5 text-white focus:border-amber-400 focus:outline-none"></textarea>
+                    <label class="block text-sm font-wiki-title text-amber-300">Story (optional)</label>
+                    <textarea id="char-bio" rows="3" placeholder="What is this person like?" class="w-full bg-[#111118] border border-[#3a3a4d] rounded px-3 py-1.5 text-white focus:border-amber-400 focus:outline-none"></textarea>
                 </div>
                 <div>
-                    <label class="block text-sm font-wiki-title text-amber-300">Kinship &amp; Custom Properties</label>
+                    <label class="block text-sm font-wiki-title text-amber-300">Family and other details</label>
                     <datalist id="new-char-reference-options"></datalist>
                     <div id="char-properties" class="space-y-2 mt-1"></div>
-                    <p class="mt-2 text-xs text-gray-400">Choose a character for mother or father to add this person to the family tree.</p>
-                    <button type="button" onclick="addCharacterProperty()" class="mt-2 text-amber-300 underline text-sm">+ Add a property</button>
+                    <p class="mt-2 text-xs text-gray-400">Choose a mother or father to add this person to the family tree. These details are optional.</p>
+                    <button type="button" onclick="addCharacterProperty()" class="mt-2 text-amber-300 underline text-sm">Add another detail</button>
                 </div>
             </div>
 
             <div class="flex justify-end gap-3 mt-6">
                 <button onclick="closeNewCharModal()" class="px-4 py-2 rounded border border-gray-600 text-gray-300 hover:bg-gray-800 font-wiki-title text-xs">
-                    Dismiss
+                    Cancel
                 </button>
                 <button id="char-save-button" onclick="saveNewCharacter()" class="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-black font-bold font-wiki-title text-xs">
-                    Inscribe Character
+                    Add character
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Custom Notification Toast (Replaces alert()) -->
-    <div id="toast-box" class="hidden fixed bottom-5 right-5 z-50 bg-black border-2 border-yellow-300 text-yellow-300 font-pixel text-xs px-4 py-3 shadow-lg">
+    <div id="toast-box" role="status" aria-live="polite" class="hidden fixed bottom-5 right-5 z-50 max-w-[calc(100vw-2.5rem)] bg-black border-2 border-yellow-300 text-yellow-300 font-vt text-xl px-4 py-3 shadow-lg">
         * Realm inscribed!
     </div>
 
@@ -985,7 +972,7 @@
                 await Promise.all(worldsData.map(saveWorld));
             } catch (error) {
                 console.error('Could not save this chronicle:', error);
-                showToast('* Thy changes could not be saved; check this device’s storage.');
+                showToast('Could not save your changes. Check the storage on this device.');
             }
         }
 
@@ -1166,20 +1153,21 @@
                         ? `<button class="text-amber-300 underline" onclick="openCharacterArticle('${escapeHtml(character.id)}')">@${escapeHtml(name)}</button>`
                         : `<span class="text-amber-300">@${escapeHtml(name)}</span>`;
                 });
-                const heading = safe.match(/^(#{1,3})\s+(.+)$/);
+                const heading = safe.match(/^\s*(#{1,3})\s*(.+?)\s*$/);
                 if (heading) return `<h${heading[1].length}>${heading[2]}</h${heading[1].length}>`;
                 return `<p>${safe}</p>`;
         }
 
         function renderVisualEditor(world, editorId, markdown) {
             return `<div class="visual-editor space-y-3">
+                <p class="text-sm text-gray-300">Click the words below to change them. Use a button to add a heading, text, or picture.</p>
                 <div role="toolbar" aria-label="Article formatting" class="flex flex-wrap gap-2 border-y border-[#3a3a4d] py-2">
-                    <button type="button" onmousedown="event.preventDefault()" onclick="insertEditorBlock('${editorId}','section')" class="border border-[#3a3a4d] rounded px-2 py-1 text-sm hover:border-amber-400">+ Section</button>
-                    <button type="button" onmousedown="event.preventDefault()" onclick="insertEditorBlock('${editorId}','paragraph')" class="border border-[#3a3a4d] rounded px-2 py-1 text-sm hover:border-amber-400">+ Text</button>
-                    <button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('bold')" class="border border-[#3a3a4d] rounded px-2 py-1 text-sm hover:border-amber-400"><strong>Bold</strong></button>
-                    <label class="cursor-pointer border border-[#3a3a4d] rounded px-2 py-1 text-sm hover:border-amber-400">+ Image<input type="file" accept="image/*" class="hidden" onchange="insertVisualImage(this.files[0],'${editorId}'); this.value='';"></label>
+                    <button type="button" onmousedown="event.preventDefault()" onclick="insertEditorBlock('${editorId}','section')" class="border border-[#3a3a4d] rounded px-3 py-2 text-sm hover:border-amber-400">Add a heading</button>
+                    <button type="button" onmousedown="event.preventDefault()" onclick="insertEditorBlock('${editorId}','paragraph')" class="border border-[#3a3a4d] rounded px-3 py-2 text-sm hover:border-amber-400">Add text</button>
+                    <button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('bold')" class="border border-[#3a3a4d] rounded px-3 py-2 text-sm hover:border-amber-400"><strong>Bold text</strong></button>
+                    <label class="cursor-pointer border border-[#3a3a4d] rounded px-3 py-2 text-sm hover:border-amber-400">Add a picture<input type="file" accept="image/*" class="hidden" onchange="insertVisualImage(this.files[0],'${editorId}'); this.value='';"></label>
                 </div>
-                <div id="${editorId}" class="article-content visual-article-editor min-h-64 border border-[#3a3a4d] rounded p-4 text-lg" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="true">${markdown ? renderArticleMarkdown(markdown, world, false) : '<p><br></p>'}</div>
+                <div id="${editorId}" class="article-content visual-article-editor min-h-64 border border-[#3a3a4d] rounded p-4 text-lg focus:outline-none focus:ring-2 focus:ring-amber-400" contenteditable="true" role="textbox" aria-label="Page text. Click to write." aria-multiline="true" spellcheck="true">${markdown ? renderArticleMarkdown(markdown, world, false) : '<p><br></p>'}</div>
             </div>`;
         }
 
@@ -1208,7 +1196,8 @@
                     lines.push(`[[image:${node.dataset.imageFile}|${caption}|${node.dataset.imageSide || 'right'}]]`);
                 } else if (node.tagName === 'H1' || node.tagName === 'H2' || node.tagName === 'H3') {
                     const depth = '#'.repeat(Number(node.tagName[1]));
-                    lines.push(`${depth} ${serializeEditorInline(node).trim()}`);
+                    const heading = serializeEditorInline(node).trim();
+                    if (heading) lines.push(`${depth} ${heading}`);
                 } else if (node.tagName === 'UL' || node.tagName === 'OL') {
                     [...node.children].filter(child => child.tagName === 'LI').forEach(child => lines.push(`- ${serializeEditorInline(child).trim()}`));
                 } else if (node.tagName === 'P' && [...node.children].some(child =>
@@ -1230,7 +1219,7 @@
             const editor = document.getElementById(editorId);
             if (!editor) return;
             const heading = document.createElement(kind === 'section' ? 'h2' : 'p');
-            heading.textContent = kind === 'section' ? 'New section' : 'Write here…';
+            heading.textContent = kind === 'section' ? 'New heading' : 'Write here…';
             const paragraph = kind === 'section' ? document.createElement('p') : null;
             if (paragraph) paragraph.innerHTML = '<br>';
             const selection = window.getSelection();
@@ -1254,7 +1243,6 @@
             range.insertNode(fragment);
             const caret = document.createRange();
             caret.selectNodeContents(heading);
-            caret.collapse(false);
             selection?.removeAllRanges();
             selection?.addRange(caret);
             editor.focus();
@@ -1285,7 +1273,7 @@
                 else editor.append(figure);
             } catch (error) {
                 console.error('Could not insert image:', error);
-                showToast('* This image could not be added to the article.');
+                showToast('Could not add this picture.');
             }
         }
 
@@ -1388,7 +1376,7 @@
             const previous = { ...character };
             const name = document.getElementById('character-page-name').value.trim();
             if (!name) {
-                showToast('* Pray give this character a name.');
+                showToast('Please enter a name.');
                 return;
             }
             character.name = name;
@@ -1405,18 +1393,18 @@
                 character.article = serializeVisualEditor('character-article-editor');
             } catch (error) {
                 Object.assign(character, previous);
-                showToast('* The character article could not be read.');
+                showToast('This page could not be read. Please try again.');
                 return;
             }
             try {
                 await saveWorld(world);
                 articleEditing = false;
                 renderWiki();
-                showToast('* The character page hath been amended.');
+                showToast('Character saved.');
             } catch (error) {
                 console.error('Could not save article:', error);
                 Object.assign(character, previous);
-                showToast('* This character page could not be saved to this device.');
+                showToast('Could not save this character on this device.');
             }
         }
 
@@ -1424,15 +1412,15 @@
             const text = world.pages?.[key] || '';
             if (pageEditingKey === key) {
                 return `<section class="mt-8 border-t border-[#323244] pt-5">
-                    <h2 class="font-wiki-title text-xl text-amber-400 mb-3">Page text</h2>
+                    <h2 class="font-wiki-title text-xl text-amber-400 mb-3">Edit this page</h2>
                     ${renderVisualEditor(world, `page-${key}`, text)}
-                    <div class="flex gap-2 mt-3"><button onclick="saveWikiPage('${key}')" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save page</button><button onclick="pageEditingKey=null; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div>
+                    <div class="flex gap-2 mt-3"><button onclick="saveWikiPage('${key}')" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save changes</button><button onclick="pageEditingKey=null; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div>
                 </section>`;
             }
             return `<section class="mt-8 border-t border-[#323244] pt-5">
-                ${text ? '<h2 class="font-wiki-title text-xl text-amber-400 mb-3">Chronicle</h2>' : ''}
-                <div class="article-content text-lg">${text ? renderArticleMarkdown(text, world) : '<p class="italic text-gray-400">No page chronicle hath yet been written.</p>'}</div>
-                ${showEdit ? `<button onclick="editWikiPage('${key}')" class="mt-3 px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Edit</button>` : ''}
+                ${text ? '<h2 class="font-wiki-title text-xl text-amber-400 mb-3">Story</h2>' : ''}
+                <div class="article-content text-lg">${text ? renderArticleMarkdown(text, world) : '<p class="italic text-gray-400">Nothing written yet.</p>'}</div>
+                ${showEdit ? `<button onclick="editWikiPage('${key}')" class="mt-3 px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Edit page</button>` : ''}
             </section>`;
         }
 
@@ -1453,41 +1441,41 @@
             try {
                 world.pages[key] = serializeVisualEditor(`page-${key}`);
             } catch (error) {
-                showToast('* The page editor could not be read.');
+                showToast('This page could not be read. Please try again.');
                 return;
             }
             try {
                 await saveWorld(world);
                 pageEditingKey = null;
                 renderWikiContent();
-                showToast('* This page hath been inscribed.');
+                showToast('Page saved.');
             } catch (error) {
                 console.error('Could not save wiki page:', error);
                 world.pages[key] = previous;
-                showToast('* This page could not be saved to this device.');
+                showToast('Could not save this page on this device.');
             }
         }
 
         function renderOverviewEditor(world) {
             return `<div class="max-w-3xl mx-auto">
-                <div class="border-b border-[#323244] pb-4 mb-6"><div class="text-xs font-pixel text-amber-400 mb-2">EDIT REALM OVERVIEW</div><h1 class="font-wiki-title text-3xl font-bold text-white">Amend the Chronicle</h1></div>
+                <div class="border-b border-[#323244] pb-4 mb-6"><div class="text-xs font-pixel text-amber-400 mb-2">EDIT WORLD</div><h1 class="font-wiki-title text-3xl font-bold text-white">Change your world</h1><p class="mt-2 text-gray-300">Click a box to change it. Add a story or places, then choose Save changes.</p></div>
                 <div class="space-y-4 font-wiki-body text-lg">
-                    <label class="block text-amber-300">Realm name<input id="overview-name" value="${escapeHtml(world.name)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
-                    <label class="block text-amber-300">Motto<input id="overview-motto" value="${escapeHtml(world.motto)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
-                    <label class="block text-amber-300">Current epoch<input id="overview-era" value="${escapeHtml(world.era)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
-                    <label class="block text-amber-300">High seat<input id="overview-capital" value="${escapeHtml(world.capital)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
-                    <label class="block text-amber-300">Sovereign<input id="overview-sovereign" value="${escapeHtml(world.sovereign)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
-                    <div><label class="block text-amber-300 mb-2">Genesis &amp; chronicle</label>${renderVisualEditor(world, 'overview-article-editor', world.article || world.lore || '')}</div>
-                    <div><h2 class="font-wiki-title text-amber-300 mb-2">Provinces &amp; landmarks</h2><div id="geography-editor" class="space-y-2">${world.geography.map(location => `<div class="geography-entry grid gap-2 sm:grid-cols-2"><input aria-label="Province name" value="${escapeHtml(location.name)}" placeholder="Place name" class="geography-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Province description" value="${escapeHtml(location.desc)}" placeholder="Description" class="geography-desc bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></div>`).join('')}</div><button onclick="addGeographyRow()" class="mt-2 text-amber-300 underline">+ Add a province</button></div>
+                <label class="block text-amber-300">World name<input id="overview-name" value="${escapeHtml(world.name)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
+                <label class="block text-amber-300">Short saying<input id="overview-motto" value="${escapeHtml(world.motto)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
+                <label class="block text-amber-300">Time period<input id="overview-era" value="${escapeHtml(world.era)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
+                <label class="block text-amber-300">Main city<input id="overview-capital" value="${escapeHtml(world.capital)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
+                <label class="block text-amber-300">Leader<input id="overview-sovereign" value="${escapeHtml(world.sovereign)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
+                <div><label class="block text-amber-300 mb-2">World story</label>${renderVisualEditor(world, 'overview-article-editor', world.article || world.lore || '')}</div>
+                <div><h2 class="font-wiki-title text-amber-300 mb-2">Places</h2><p class="mb-2 text-sm text-gray-300">Add a place name and a few words about it.</p><div id="geography-editor" class="space-y-2">${world.geography.map(location => `<div class="geography-entry grid gap-2 sm:grid-cols-2"><input aria-label="Place name" value="${escapeHtml(location.name)}" placeholder="Place name" class="geography-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Place description" value="${escapeHtml(location.desc)}" placeholder="What is special about this place?" class="geography-desc bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></div>`).join('')}</div><button onclick="addGeographyRow()" class="mt-2 text-amber-300 underline">Add a place</button></div>
                 </div>
-                <div class="flex gap-2 mt-6"><button onclick="saveWorldOverview()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save overview</button><button onclick="overviewEditing=false; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div>
+                <div class="flex gap-2 mt-6"><button onclick="saveWorldOverview()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save changes</button><button onclick="overviewEditing=false; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div>
             </div>`;
         }
 
         function addGeographyRow() {
             const row = document.createElement('div');
             row.className = 'geography-entry grid gap-2 sm:grid-cols-2';
-            row.innerHTML = '<input aria-label="Province name" placeholder="Place name" class="geography-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Province description" placeholder="Description" class="geography-desc bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white">';
+            row.innerHTML = '<input aria-label="Place name" placeholder="Place name" class="geography-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Place description" placeholder="What is special about this place?" class="geography-desc bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white">';
             document.getElementById('geography-editor').appendChild(row);
         }
 
@@ -1503,7 +1491,7 @@
             const world = worldsData.find(item => item.id === currentWorldId);
             const name = document.getElementById('overview-name').value.trim();
             if (!name) {
-                showToast('* Pray give this realm a name.');
+                showToast('Please enter a name for your world.');
                 return;
             }
             const previous = JSON.parse(JSON.stringify(world));
@@ -1516,7 +1504,7 @@
                 world.lore = serializeVisualEditor('overview-article-editor');
             } catch (error) {
                 Object.assign(world, previous);
-                showToast('* The overview article could not be read.');
+                showToast('The story could not be read. Please try again.');
                 return;
             }
             world.article = world.lore;
@@ -1529,11 +1517,11 @@
                 overviewEditing = false;
                 populateWorldSelectors();
                 renderWiki();
-                showToast('* The realm overview hath been amended.');
+                showToast('World saved.');
             } catch (error) {
                 console.error('Could not save realm overview:', error);
                 Object.assign(world, previous);
-                showToast('* The overview could not be saved to this device.');
+                showToast('Could not save this world on this device.');
             }
         }
 
@@ -1575,7 +1563,7 @@
                 const desc = row.querySelector('.relation-desc').value.trim();
                 if (!from && !to && !type && !desc) continue;
                 if (!from || !to || !type) {
-                    showToast('* Each bond must name both characters and its nature.');
+                    showToast('Enter both people and the kind of connection.');
                     return;
                 }
                 relations.push({ from, to, type, desc });
@@ -1584,7 +1572,7 @@
                 world.pages ||= {};
                 world.pages.relations = serializeVisualEditor('page-relations');
             } catch (error) {
-                showToast('* The bonds article could not be read.');
+                showToast('The connections page could not be read. Please try again.');
                 return;
             }
             world.relations = relations;
@@ -1592,33 +1580,33 @@
                 await saveWorld(world);
                 relationsEditing = false;
                 renderWiki();
-                showToast('* The bonds and feuds hath been amended.');
+                showToast('Connections saved.');
             } catch (error) {
                 console.error('Could not save bonds:', error);
                 world.relations = previous;
                 world.pages.relations = previousPage;
-                showToast('* The bonds could not be saved.');
+                showToast('Could not save these connections.');
             }
         }
 
         function addCharacterProperty(name = '', value = '') {
             const row = document.createElement('div');
             row.className = 'grid grid-cols-1 sm:grid-cols-2 gap-2';
-            row.innerHTML = `<input aria-label="Property name" placeholder="e.g. mother" value="${escapeHtml(name)}" class="property-name bg-[#111118] border border-[#3a3a4d] rounded px-2 py-1 text-white"><input aria-label="Property value" list="new-char-reference-options" placeholder="Choose a character or enter a value" value="${escapeHtml(value)}" class="property-value bg-[#111118] border border-[#3a3a4d] rounded px-2 py-1 text-white">`;
+            row.innerHTML = `<input aria-label="Detail name" placeholder="Detail (for example: mother)" value="${escapeHtml(name)}" class="property-name bg-[#111118] border border-[#3a3a4d] rounded px-2 py-1 text-white"><input aria-label="Detail" list="new-char-reference-options" placeholder="Choose a person or write a detail" value="${escapeHtml(value)}" class="property-value bg-[#111118] border border-[#3a3a4d] rounded px-2 py-1 text-white">`;
             document.getElementById('char-properties').appendChild(row);
         }
 
         function addCharacterPageProperty(name = '', value = '') {
             const row = document.createElement('div');
             row.className = 'character-page-property grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2';
-            row.innerHTML = `<input aria-label="Property name" placeholder="Property name (e.g. mother)" value="${escapeHtml(name)}" class="page-property-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Property value" list="character-page-reference-options" placeholder="Choose a character or enter a value" value="${escapeHtml(value)}" class="page-property-value bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white">`;
+            row.innerHTML = `<input aria-label="Detail name" placeholder="Detail (for example: mother)" value="${escapeHtml(name)}" class="page-property-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Detail" list="character-page-reference-options" placeholder="Choose a person or write a detail" value="${escapeHtml(value)}" class="page-property-value bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white">`;
             document.getElementById('character-page-properties').appendChild(row);
         }
 
         function renderCharacterPropertyRows(world, character, listId) {
             const properties = Object.entries(character.properties || {});
             const rows = properties.length ? properties : [['mother', ''], ['father', '']];
-            return `${renderCharacterReferenceOptions(world, listId)}${rows.map(([key, value]) => `<div class="character-page-property grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2"><input aria-label="Property name" placeholder="Property name (e.g. mother)" value="${escapeHtml(key)}" class="page-property-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Property value" list="${listId}" placeholder="Choose a character or enter a value" value="${escapeHtml(value)}" class="page-property-value bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></div>`).join('')}`;
+            return `${renderCharacterReferenceOptions(world, listId)}${rows.map(([key, value]) => `<div class="character-page-property grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2"><input aria-label="Detail name" placeholder="Detail (for example: mother)" value="${escapeHtml(key)}" class="page-property-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Detail" list="${listId}" placeholder="Choose a person or write a detail" value="${escapeHtml(value)}" class="page-property-value bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></div>`).join('')}`;
         }
 
         function renderPropertyValue(world, value) {
@@ -1638,14 +1626,14 @@
                 editor.setRangeText(token, editor.selectionStart, editor.selectionEnd, 'end');
             } catch (error) {
                 console.error('Could not store image:', error);
-                showToast('* The image could not be stored on this device.');
+                showToast('Could not save this picture on this device.');
             }
         }
 
         async function convertGoogleDoc(file) {
             if (!file) return;
             if (!window.mammoth) {
-                showToast('* The document converter could not be loaded.');
+                showToast('The Google Docs importer did not load.');
                 return;
             }
             try {
@@ -1682,11 +1670,11 @@
                 currentWikiTab = 'articles';
                 articleEditing = false;
                 setWikiTab('articles');
-                showToast('* Thy document hath been converted into an article.');
+                showToast('Your document was added to the page.');
                 if (result.messages.length) console.warn('Document conversion notes:', result.messages);
             } catch (error) {
                 console.error('Could not convert document:', error);
-                showToast('* This document could not be converted.');
+                showToast('Could not open this document.');
             }
         }
 
@@ -1718,7 +1706,7 @@
 
         function showToast(msg) {
             const toast = document.getElementById('toast-box');
-            toast.textContent = msg;
+            toast.textContent = String(msg).replace(/^\*\s*/, '');
             toast.classList.remove('hidden');
             setTimeout(() => {
                 toast.classList.add('hidden');
@@ -1765,7 +1753,7 @@
 
             document.querySelectorAll('.wiki-nav-btn').forEach(btn => btn.classList.remove('active'));
 
-            const activeBtn = document.getElementById(`tab-${tabName}`);
+            const activeBtn = document.getElementById(`tab-${tabName === 'articles' ? 'characters' : tabName}`);
             if (activeBtn) activeBtn.classList.add('active');
 
             renderWikiContent();
@@ -1798,36 +1786,37 @@
                 character = world.characters[0];
                 currentArticleKey = character.id;
             }
-            if (!character) return `<div><h1 class="font-wiki-title text-3xl text-white">Character articles</h1><p class="mt-4 text-gray-300">No characters are yet inscribed.</p><button onclick="openNewCharModal()" class="mt-4 px-4 py-2 bg-amber-600 text-black rounded">Add a character</button></div>`;
+            if (!character)             return `<div><h1 class="font-wiki-title text-3xl text-white">Character pages</h1><p class="mt-4 text-gray-300">There are no people yet.</p><button onclick="openNewCharModal()" class="mt-4 px-4 py-2 bg-amber-600 text-black rounded">Add a character</button></div>`;
             const article = character.article || character.bio || '';
             const page = articleEditing
                 ? `<div class="space-y-5">
                     <header class="border-b border-[#323244] pb-4">
-                        <div class="text-xs font-pixel text-amber-400 mb-2">EDIT CHARACTER PAGE</div>
+                        <div class="text-xs font-pixel text-amber-400 mb-2">EDIT CHARACTER</div>
                         <h1 class="font-wiki-title text-3xl font-bold text-white">${escapeHtml(character.name)}</h1>
+                        <p class="mt-2 text-gray-300">Change the details or story, then choose Save changes.</p>
                     </header>
                     <section class="grid gap-3 sm:grid-cols-2">
                         <label class="text-sm text-amber-300">Name<input id="character-page-name" value="${escapeHtml(character.name)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
-                        <label class="text-sm text-amber-300">House<input id="character-page-house" value="${escapeHtml(character.house)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
+                        <label class="text-sm text-amber-300">Family<input id="character-page-house" value="${escapeHtml(character.house)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
                         <label class="text-sm text-amber-300">Role<input id="character-page-role" value="${escapeHtml(character.role)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
                         <label class="text-sm text-amber-300">Status<select id="character-page-status" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><option ${character.status === 'Living' ? 'selected' : ''}>Living</option><option ${character.status === 'Deceased' ? 'selected' : ''}>Deceased</option><option ${character.status === 'Unknown' ? 'selected' : ''}>Unknown</option></select></label>
                     </section>
                     <section>
-                        <h2 class="font-wiki-title text-lg text-amber-400">Properties</h2>
-                        <p class="text-sm text-gray-400 mt-1">For the family tree, add a mother or father and choose a character from the suggestions.</p>
+                        <h2 class="font-wiki-title text-lg text-amber-400">Family and other details</h2>
+                        <p class="text-sm text-gray-400 mt-1">Choose a mother or father from the list to show this character in the family tree. Other details are optional.</p>
                         <div id="character-page-properties" class="mt-2">${renderCharacterPropertyRows(world, character, 'character-page-reference-options')}</div>
-                        <button type="button" onclick="addCharacterPageProperty()" class="mt-2 text-amber-300 underline">+ Add property</button>
+                        <button type="button" onclick="addCharacterPageProperty()" class="mt-2 text-amber-300 underline">Add another detail</button>
                     </section>
-                    <div><h2 class="font-wiki-title text-xl text-amber-400 mb-2">Article</h2>${renderVisualEditor(world, 'character-article-editor', article)}</div>
-                    <div class="flex gap-2"><button onclick="saveArticle()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save page</button><button onclick="articleEditing=false; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div>
+                    <div><h2 class="font-wiki-title text-xl text-amber-400 mb-2">Story</h2>${renderVisualEditor(world, 'character-article-editor', article)}</div>
+                    <div class="flex gap-2"><button onclick="saveArticle()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save changes</button><button onclick="articleEditing=false; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div>
                   </div>`
                 : `<div class="flex flex-wrap items-start justify-between gap-4 border-b border-[#323244] pb-4 mb-6">
-                       <div><button onclick="setWikiTab('characters')" class="text-sm text-amber-300 underline mb-3">← Characters</button><div class="text-xs text-amber-400 mb-1">CHARACTER</div><h1 class="font-wiki-title text-3xl font-bold text-white">${escapeHtml(character.name)}</h1><p class="text-gray-400 mt-1">${escapeHtml(character.role || '')}</p></div>
-                       <button onclick="editArticle()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Edit</button>
+                       <div><button onclick="setWikiTab('characters')" class="text-sm text-amber-300 underline mb-3">← Back to people</button><div class="text-xs text-amber-400 mb-1">CHARACTER</div><h1 class="font-wiki-title text-3xl font-bold text-white">${escapeHtml(character.name)}</h1><p class="text-gray-400 mt-1">${escapeHtml(character.role || '')}</p></div>
+                       <button onclick="editArticle()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Edit page</button>
                    </div>
                    <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem]">
                        <article class="article-content leading-relaxed text-lg">${renderArticleMarkdown(article, world)}</article>
-                       <aside class="border border-[#3a3a4d] p-4 h-fit"><h2 class="font-wiki-title text-center text-amber-300 mb-3">${escapeHtml(character.name)}</h2><dl class="space-y-2 text-sm"><div><dt class="text-gray-400">House</dt><dd>${escapeHtml(character.house || '')}</dd></div><div><dt class="text-gray-400">Role</dt><dd>${escapeHtml(character.role || '')}</dd></div><div><dt class="text-gray-400">Status</dt><dd>${escapeHtml(character.status || '')}</dd></div>${Object.entries(character.properties || {}).map(([key, value]) => `<div><dt class="text-gray-400">${escapeHtml(key)}</dt><dd>${renderPropertyValue(world, value)}</dd></div>`).join('')}</dl></aside>
+                       <aside class="border border-[#3a3a4d] p-4 h-fit"><h2 class="font-wiki-title text-center text-amber-300 mb-3">${escapeHtml(character.name)}</h2><dl class="space-y-2 text-sm"><div><dt class="text-gray-400">Family</dt><dd>${escapeHtml(character.house || '')}</dd></div><div><dt class="text-gray-400">Role</dt><dd>${escapeHtml(character.role || '')}</dd></div><div><dt class="text-gray-400">Status</dt><dd>${escapeHtml(character.status || '')}</dd></div>${Object.entries(character.properties || {}).map(([key, value]) => `<div><dt class="text-gray-400">${escapeHtml(key)}</dt><dd>${renderPropertyValue(world, value)}</dd></div>`).join('')}</dl></aside>
                    </div>`;
             return `<div>${page}</div>`;
         }
@@ -1892,13 +1881,10 @@
                     <!-- Fandom-Style Article Header -->
                     <div class="border-b border-[#323244] pb-4 mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                         <div>
-                            <div class="text-xs font-pixel text-amber-400 mb-1">REALM OVERVIEW</div>
+                            <div class="text-xs font-pixel text-amber-400 mb-1">WORLD OVERVIEW</div>
                             <h1 class="font-wiki-title text-3xl sm:text-4xl font-bold text-white">${escapeHtml(world.name)}</h1>
                         </div>
-                        <span class="font-wiki-body italic text-gray-400 text-base">
-                            "Recorded by the Scribes of Cladar"
-                        </span>
-                        <button onclick="editWorldOverview()" class="px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Edit overview</button>
+                        <button onclick="editWorldOverview()" class="px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Edit page</button>
                     </div>
 
                     <!-- Fandom Infobox + Main Lore Grid -->
@@ -1911,14 +1897,14 @@
 
                             <div>
                                 <h2 class="font-wiki-title text-2xl text-amber-400 border-b border-[#2e2e3e] pb-2 mb-3">
-                                    I. Genesis &amp; Chronicle
+                                    Story
                                 </h2>
-                                <p>${escapeHtml(world.lore)}</p>
+                                <div class="article-content text-lg">${renderArticleMarkdown(world.article || world.lore || '', world)}</div>
                             </div>
 
                             <div>
                                 <h2 class="font-wiki-title text-2xl text-amber-400 border-b border-[#2e2e3e] pb-2 mb-3">
-                                    II. Notable Provinces &amp; Landmarks
+                                    Places
                                 </h2>
                                 <div class="space-y-4">
                                     ${world.geography.map(loc => `
@@ -1950,19 +1936,19 @@
                                 </div>
                                 <div class="divide-y divide-[#2e2e3e] font-wiki-body text-base">
                                     <div class="px-4 py-2.5 flex justify-between">
-                                        <span class="font-bold text-amber-300/90">Current Epoch:</span>
+                                        <span class="font-bold text-amber-300/90">Time:</span>
                                         <span class="text-gray-300 text-right">${escapeHtml(world.era)}</span>
                                     </div>
                                     <div class="px-4 py-2.5 flex justify-between">
-                                        <span class="font-bold text-amber-300/90">High Seat:</span>
+                                        <span class="font-bold text-amber-300/90">Main city:</span>
                                         <span class="text-gray-300 text-right">${escapeHtml(world.capital)}</span>
                                     </div>
                                     <div class="px-4 py-2.5 flex justify-between">
-                                        <span class="font-bold text-amber-300/90">Sovereign:</span>
+                                        <span class="font-bold text-amber-300/90">Leader:</span>
                                         <span class="text-gray-300 text-right">${escapeHtml(world.sovereign)}</span>
                                     </div>
                                     <div class="px-4 py-2.5 flex justify-between">
-                                        <span class="font-bold text-amber-300/90">Characters:</span>
+                                        <span class="font-bold text-amber-300/90">People:</span>
                                         <span class="text-gray-300 text-right">${world.characters.length}</span>
                                     </div>
                                 </div>
@@ -1974,11 +1960,11 @@
                 container.innerHTML = `
                     <div class="border-b border-[#323244] pb-4 mb-6 flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <div class="text-xs font-pixel text-amber-400 mb-1">DRAMATIS PERSONÆ</div>
-                            <h1 class="font-wiki-title text-3xl font-bold text-white">Characters of ${escapeHtml(world.name)}</h1>
+                            <div class="text-xs font-pixel text-amber-400 mb-1">PEOPLE</div>
+                            <h1 class="font-wiki-title text-3xl font-bold text-white">People in ${escapeHtml(world.name)}</h1>
                         </div>
                         <button onclick="openNewCharModal()" class="bg-amber-600 hover:bg-amber-500 text-black font-wiki-title font-bold text-xs px-4 py-2.5 rounded shadow transition-colors">
-                            + Inscribe New Character
+                            Add a character
                         </button>
                     </div>
                     ${renderPageArticle(world, 'characters')}
@@ -2001,7 +1987,7 @@
                         <div class="text-xs font-pixel text-amber-400 mb-2">FAMILY &amp; DESCENDANTS</div>
                         <h1 class="font-wiki-title text-3xl font-bold text-white">Family Tree</h1>
                     </header>
-                    <p class="mb-5 text-gray-300">This tree is built from character pages. Edit a character and set <strong>mother</strong> or <strong>father</strong> to a person in this realm; the family link will appear here when saved.</p>
+                    <p class="mb-5 text-gray-300">This tree fills itself in. Edit a person and choose their mother or father to add family links.</p>
                     ${renderGeneratedFamilyTree(world)}
                     ${renderPageArticle(world, 'genealogy')}
                 `;
@@ -2066,7 +2052,7 @@
             const loreInput = document.getElementById('new-world-lore').value.trim();
 
             if (!nameInput) {
-                showToast("* Pray speak a name for thy realm!");
+                showToast('Please enter a name for your world.');
                 return;
             }
 
@@ -2117,13 +2103,13 @@
 
             closeNewWorldModal();
             playBlip(780);
-            showToast(`* Realm "${nameInput}" hath been forged!`);
+            showToast(`Created "${nameInput}".`);
         }
 
         function openNewCharModal() {
             playBlip(580);
-            document.getElementById('char-modal-title').textContent = 'Inscribe a New Character';
-            document.getElementById('char-save-button').textContent = 'Inscribe Character';
+            document.getElementById('char-modal-title').textContent = 'Add a character';
+            document.getElementById('char-save-button').textContent = 'Add character';
             ['char-name', 'char-house', 'char-role', 'char-bio'].forEach(id => { document.getElementById(id).value = ''; });
             document.getElementById('char-status').value = 'Living';
             const world = worldsData.find(item => item.id === currentWorldId);
@@ -2155,7 +2141,7 @@
             });
 
             if (!name) {
-                showToast("* Every soul must bear a name!");
+                showToast('Please enter a name for this person.');
                 return;
             }
 
@@ -2187,13 +2173,13 @@
 
             closeNewCharModal();
             renderWiki();
-            showToast(`* ${name} inscribed into the annals!`);
+            showToast(`Added ${name}.`);
         }
 
         async function exportWorld() {
             const world = worldsData.find(item => item.id === currentWorldId);
             if (!window.zip) {
-                showToast('* The archive-maker could not be loaded.');
+                showToast('The ZIP tool did not load.');
                 return;
             }
             let writer;
@@ -2230,7 +2216,7 @@
                     link.click();
                     setTimeout(() => URL.revokeObjectURL(link.href), 60000);
                 }
-                showToast('* The realm hath been packed into a ZIP archive.');
+                showToast('Your world was saved in a ZIP file.');
             } catch (error) {
                 console.error('World export failed:', error);
                 showToast(`* Export failed: ${error.message}`);
@@ -2240,7 +2226,7 @@
         async function importWorldZip(file) {
             if (!file) return;
             if (!window.zip) {
-                showToast('* The archive-reader could not be loaded.');
+                showToast('The ZIP tool did not load.');
                 return;
             }
             let reader;
@@ -2321,7 +2307,7 @@
                 document.getElementById('wiki-world-switcher').value = world.id;
                 renderWiki();
                 document.getElementById('world-zip-input').value = '';
-                showToast('* Thy realm hath been imported and set in order.');
+                showToast('World added.');
             } catch (error) {
                 if (reader) await reader.close().catch(closeError => console.error('Could not close archive:', closeError));
                 console.error('World import failed:', error);
@@ -2366,7 +2352,7 @@
                 if (worldsData.length) await persistWorlds();
             } catch (error) {
                 console.error('Could not load local chronicles:', error);
-                showToast('* Local storage could not be opened; this session may not persist.');
+                showToast('Could not open storage on this device. Your changes may not be saved.');
                 populateWorldSelectors();
             }
         });
