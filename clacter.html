@@ -291,7 +291,7 @@
                 CL<span class="text-yellow-300">A</span>CTER
             </h1>
             <p class="font-vt text-xl sm:text-2xl text-gray-400 mt-3 tracking-widest uppercase">
-                * A Chronicle of Forged Realms &amp; Mortal Souls *
+                * A Chronicle *
             </p>
         </div>
 
@@ -339,18 +339,15 @@
             </div>
         </div>
 
-        <!-- Subtle Footer Note -->
-        <div class="mt-8 font-vt text-lg text-gray-500 text-center">
-            * Knowing that countless worlds await thy quill... It fills thee with DETERMINATION.
-        </div>
+       
     </main>
 
     <!-- =====================================================================
-         VIEW 2: FANDOM-STYLE WIKI INTERFACE
+         VIEW 2: WIKI INTERFACE
     ====================================================================== -->
     <section id="wiki-view" class="hidden min-h-screen w-full bg-[#111116] text-gray-100 relative z-20 flex flex-col">
 
-        <!-- Top Fandom-like Community Header Banner -->
+        <!-- Top Community Header Banner -->
         <header class="bg-[#181822] border-b-2 border-[#323244] px-4 sm:px-8 py-3 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30 shadow-lg">
             <div class="flex items-center gap-4">
                 <!-- Return to Landing (CLACTER) -->
@@ -519,7 +516,7 @@
     ====================================================================== -->
     <div id="new-char-modal" class="hidden fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4">
         <div class="bg-[#1b1b26] border-2 border-amber-500 rounded-lg w-full max-w-lg p-6 text-gray-100 shadow-2xl">
-            <h3 class="font-wiki-title text-xl font-bold text-amber-400 mb-2">
+            <h3 id="char-modal-title" class="font-wiki-title text-xl font-bold text-amber-400 mb-2">
                 Inscribe a New Character
             </h3>
             <p class="font-wiki-body italic text-gray-300 mb-4">
@@ -542,6 +539,12 @@
                     </div>
                 </div>
                 <div>
+                    <label class="block text-sm font-wiki-title text-amber-300">Status</label>
+                    <select id="char-status" class="w-full bg-[#111118] border border-[#3a3a4d] rounded px-3 py-1.5 text-white">
+                        <option>Living</option><option>Deceased</option><option>Unknown</option>
+                    </select>
+                </div>
+                <div>
                     <label class="block text-sm font-wiki-title text-amber-300">Mortal Chronicle (Bio)</label>
                     <textarea id="char-bio" rows="3" placeholder="Born beneath a weeping comet, she swore..." class="w-full bg-[#111118] border border-[#3a3a4d] rounded px-3 py-1.5 text-white focus:border-amber-400 focus:outline-none"></textarea>
                 </div>
@@ -556,7 +559,7 @@
                 <button onclick="closeNewCharModal()" class="px-4 py-2 rounded border border-gray-600 text-gray-300 hover:bg-gray-800 font-wiki-title text-xs">
                     Dismiss
                 </button>
-                <button onclick="saveNewCharacter()" class="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-black font-bold font-wiki-title text-xs">
+                <button id="char-save-button" onclick="saveNewCharacter()" class="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-black font-bold font-wiki-title text-xs">
                     Inscribe Character
                 </button>
             </div>
@@ -766,53 +769,6 @@
                         desc: 'He mistrusts her witch-craft, yet relies upon her lantern-visions to safeguard the realm.'
                     }
                 ]
-            },
-            {
-                id: 'clockwork-vale',
-                name: 'Veridia of the Brass Moon',
-                motto: 'By gear and grace, time turneth eternal.',
-                era: 'Epoch of the Pendulum',
-                capital: 'Chronos-on-Thames',
-                sovereign: 'Arch-Artificer Oberon',
-                lore: `Suspended amidst a sea of perpetual autumn clouds, Veridia is a realm where ancient magic and intricate clockwork intertwine. Giant brass astrolabes orbit the heavens, and every citizen carries a soul-lantern tuned to the heartbeat of the Great Pendulum.`,
-                geography: [
-                    { name: 'The Cogwheel Woods', desc: 'Forests of copper-barked oaks whose leaves chime like tiny bells.' },
-                    { name: 'Observatory of the Astrolabe', desc: 'Where scholars chart the destinies of unborn heroes.' }
-                ],
-                characters: [
-                    {
-                        id: 'v1',
-                        name: 'Arch-Artificer Oberon',
-                        house: 'Guild of the Pendulum',
-                        role: 'Grand Keeper of Time',
-                        status: 'Living',
-                        bio: 'An immortal tinkerer whose left arm is wrought of gilded brass and starlight.'
-                    },
-                    {
-                        id: 'v2',
-                        name: 'Beatrice Bellweather',
-                        house: 'House Bellweather',
-                        role: 'Sky-Corsair Captain',
-                        status: 'Living',
-                        bio: 'Daring navigator of the cloud-seas, renowned for her wit and unmatched swordplay.'
-                    }
-                ],
-                genealogy: [
-                    {
-                        house: 'House Bellweather',
-                        ancestor: 'Admiral Horatio Bellweather (†)',
-                        spouse: 'Lady Miranda',
-                        descendants: ['Captain Beatrice Bellweather']
-                    }
-                ],
-                relations: [
-                    {
-                        from: 'Arch-Artificer Oberon',
-                        to: 'Captain Beatrice Bellweather',
-                        type: 'Patron & Rogue',
-                        desc: 'He funds her sky-voyages in secret, seeking lost gears from the Lower World.'
-                    }
-                ]
             }
         ];
 
@@ -820,6 +776,11 @@
         let currentWikiTab = 'world';
         let currentArticleKey = 'world';
         let articleEditing = false;
+        let overviewEditing = false;
+        let pageEditingKey = null;
+        let lineagesEditing = false;
+        let relationsEditing = false;
+        let editingCharacterId = null;
         let installPrompt = null;
         const DB_NAME = 'clacter-worlds';
         const DB_VERSION = 1;
@@ -865,7 +826,8 @@
                 request.onerror = () => reject(request.error);
             });
             db.close();
-            if (saved.length) worldsData = saved;
+            const retainedWorlds = saved.filter(world => world.id !== 'clockwork-vale');
+            if (retainedWorlds.length) worldsData = retainedWorlds;
             worldsData.forEach(world => {
                 world.characters ||= [];
                 world.geography ||= [];
@@ -873,6 +835,7 @@
                 world.relations ||= [];
                 world.images ||= [];
                 world.article ||= '';
+                world.pages ||= {};
                 world.characters.forEach(character => { character.properties ||= {}; });
             });
         }
@@ -1058,6 +1021,208 @@
             showToast('* Thy article hath been inscribed.');
         }
 
+        function renderPageArticle(world, key) {
+            const text = world.pages?.[key] || '';
+            if (pageEditingKey === key) {
+                return `<section class="mt-8 border-t border-[#323244] pt-5">
+                    <h2 class="font-wiki-title text-xl text-amber-400 mb-3">Edit this page</h2>
+                    <textarea id="page-article-editor" rows="8" class="article-editor w-full bg-[#0e0e14] border border-[#3a3a4d] rounded p-4 text-gray-100 font-mono text-sm" placeholder="# Chronicle&#10;&#10;Write this page in simple Markdown.">${escapeHtml(text)}</textarea>
+                    <p class="text-sm text-gray-400 mt-2">Headings, **bold**, *italic*, lists, @character links, and image captions are supported.</p>
+                    <div class="flex gap-2 mt-3"><button onclick="saveWikiPage('${key}')" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save page</button><button onclick="pageEditingKey=null; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div>
+                </section>`;
+            }
+            return `<section class="mt-8 border-t border-[#323244] pt-5">
+                <h2 class="font-wiki-title text-xl text-amber-400 mb-3">Chronicle of this page</h2>
+                <div class="article-content text-lg">${text ? renderArticleMarkdown(text, world) : '<p class="italic text-gray-400">No page chronicle hath yet been written.</p>'}</div>
+                <button onclick="editWikiPage('${key}')" class="mt-3 px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Edit page</button>
+            </section>`;
+        }
+
+        function editWikiPage(key) {
+            pageEditingKey = key;
+            renderWikiContent();
+            document.getElementById('page-article-editor')?.focus();
+        }
+
+        async function saveWikiPage(key) {
+            const world = worldsData.find(item => item.id === currentWorldId);
+            world.pages ||= {};
+            const previous = world.pages[key] || '';
+            world.pages[key] = document.getElementById('page-article-editor').value;
+            try {
+                await saveWorld(world);
+                pageEditingKey = null;
+                renderWikiContent();
+                showToast('* This page hath been inscribed.');
+            } catch (error) {
+                console.error('Could not save wiki page:', error);
+                world.pages[key] = previous;
+                showToast('* This page could not be saved to this device.');
+            }
+        }
+
+        function renderOverviewEditor(world) {
+            return `<div class="max-w-3xl mx-auto">
+                <div class="border-b border-[#323244] pb-4 mb-6"><div class="text-xs font-pixel text-amber-400 mb-2">EDIT REALM OVERVIEW</div><h1 class="font-wiki-title text-3xl font-bold text-white">Amend the Chronicle</h1></div>
+                <div class="space-y-4 font-wiki-body text-lg">
+                    <label class="block text-amber-300">Realm name<input id="overview-name" value="${escapeHtml(world.name)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
+                    <label class="block text-amber-300">Motto<input id="overview-motto" value="${escapeHtml(world.motto)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
+                    <label class="block text-amber-300">Current epoch<input id="overview-era" value="${escapeHtml(world.era)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
+                    <label class="block text-amber-300">High seat<input id="overview-capital" value="${escapeHtml(world.capital)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
+                    <label class="block text-amber-300">Sovereign<input id="overview-sovereign" value="${escapeHtml(world.sovereign)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
+                    <label class="block text-amber-300">Genesis &amp; chronicle<textarea id="overview-lore" rows="5" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white">${escapeHtml(world.lore)}</textarea></label>
+                    <div><h2 class="font-wiki-title text-amber-300 mb-2">Provinces &amp; landmarks</h2><div id="geography-editor" class="space-y-2">${world.geography.map(location => `<div class="geography-entry grid gap-2 sm:grid-cols-2"><input aria-label="Province name" value="${escapeHtml(location.name)}" placeholder="Place name" class="geography-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Province description" value="${escapeHtml(location.desc)}" placeholder="Description" class="geography-desc bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></div>`).join('')}</div><button onclick="addGeographyRow()" class="mt-2 text-amber-300 underline">+ Add a province</button></div>
+                </div>
+                <div class="flex gap-2 mt-6"><button onclick="saveWorldOverview()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save overview</button><button onclick="overviewEditing=false; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div>
+            </div>`;
+        }
+
+        function addGeographyRow() {
+            const row = document.createElement('div');
+            row.className = 'geography-entry grid gap-2 sm:grid-cols-2';
+            row.innerHTML = '<input aria-label="Province name" placeholder="Place name" class="geography-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Province description" placeholder="Description" class="geography-desc bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white">';
+            document.getElementById('geography-editor').appendChild(row);
+        }
+
+        function editWorldOverview() {
+            overviewEditing = true;
+            renderWikiContent();
+        }
+
+        async function saveWorldOverview() {
+            const world = worldsData.find(item => item.id === currentWorldId);
+            const name = document.getElementById('overview-name').value.trim();
+            if (!name) {
+                showToast('* Pray give this realm a name.');
+                return;
+            }
+            const previous = JSON.parse(JSON.stringify(world));
+            world.name = name;
+            world.motto = document.getElementById('overview-motto').value.trim();
+            world.era = document.getElementById('overview-era').value.trim();
+            world.capital = document.getElementById('overview-capital').value.trim();
+            world.sovereign = document.getElementById('overview-sovereign').value.trim();
+            world.lore = document.getElementById('overview-lore').value.trim();
+            world.geography = [...document.querySelectorAll('#geography-editor .geography-entry')].map(row => ({
+                name: row.querySelector('.geography-name').value.trim(),
+                desc: row.querySelector('.geography-desc').value.trim()
+            })).filter(location => location.name || location.desc);
+            try {
+                await saveWorld(world);
+                overviewEditing = false;
+                populateWorldSelectors();
+                renderWiki();
+                showToast('* The realm overview hath been amended.');
+            } catch (error) {
+                console.error('Could not save realm overview:', error);
+                Object.assign(world, previous);
+                showToast('* The overview could not be saved to this device.');
+            }
+        }
+
+        function renderLineageEditor(world) {
+            return `<div class="max-w-3xl mx-auto"><div class="border-b border-[#323244] pb-4 mb-6"><div class="text-xs font-pixel text-amber-400 mb-2">EDIT THE FAMILY TREE</div><h1 class="font-wiki-title text-3xl font-bold text-white">Amend Lineages</h1></div>
+                <div id="lineage-editor-list" class="space-y-4">${world.genealogy.map(tree => `<div class="lineage-entry bg-[#1a1a24] border border-[#323246] rounded p-4 space-y-2">
+                    <input class="lineage-house w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="House" placeholder="House" value="${escapeHtml(tree.house)}">
+                    <div class="grid gap-2 sm:grid-cols-2"><input class="lineage-ancestor bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Ancestor" placeholder="Ancestor" value="${escapeHtml(tree.ancestor)}"><input class="lineage-spouse bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Consort" placeholder="Consort" value="${escapeHtml(tree.spouse)}"></div>
+                    <textarea class="lineage-descendants w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Descendants" placeholder="One descendant per line">${escapeHtml((tree.descendants || []).join('\n'))}</textarea>
+                </div>`).join('')}</div>
+                <button onclick="addLineageEditor()" class="mt-3 text-amber-300 underline">+ Add a lineage</button>
+                <div class="flex gap-2 mt-6"><button onclick="saveLineages()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save family tree</button><button onclick="lineagesEditing=false; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div></div>`;
+        }
+
+        function addLineageEditor() {
+            const row = document.createElement('div');
+            row.className = 'lineage-entry bg-[#1a1a24] border border-[#323246] rounded p-4 space-y-2';
+            row.innerHTML = '<input class="lineage-house w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="House" placeholder="House"><div class="grid gap-2 sm:grid-cols-2"><input class="lineage-ancestor bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Ancestor" placeholder="Ancestor"><input class="lineage-spouse bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Consort" placeholder="Consort"></div><textarea class="lineage-descendants w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Descendants" placeholder="One descendant per line"></textarea>';
+            document.getElementById('lineage-editor-list').appendChild(row);
+        }
+
+        function editLineages() {
+            lineagesEditing = true;
+            renderWikiContent();
+        }
+
+        async function saveLineages() {
+            const world = worldsData.find(item => item.id === currentWorldId);
+            const previous = world.genealogy;
+            const lineages = [];
+            for (const row of document.querySelectorAll('#lineage-editor-list .lineage-entry')) {
+                const house = row.querySelector('.lineage-house').value.trim();
+                const ancestor = row.querySelector('.lineage-ancestor').value.trim();
+                const spouse = row.querySelector('.lineage-spouse').value.trim();
+                const descendants = row.querySelector('.lineage-descendants').value.split(/\r?\n/).map(value => value.trim()).filter(Boolean);
+                if (!house && !ancestor && !spouse && !descendants.length) continue;
+                if (!house || !ancestor) {
+                    showToast('* Each lineage must name its house and ancestor.');
+                    return;
+                }
+                lineages.push({ house, ancestor, spouse, descendants });
+            }
+            world.genealogy = lineages;
+            try {
+                await saveWorld(world);
+                lineagesEditing = false;
+                renderWiki();
+                showToast('* The family tree hath been amended.');
+            } catch (error) {
+                console.error('Could not save family tree:', error);
+                world.genealogy = previous;
+                showToast('* The family tree could not be saved.');
+            }
+        }
+
+        function renderRelationsEditor(world) {
+            return `<div class="max-w-3xl mx-auto"><div class="border-b border-[#323244] pb-4 mb-6"><div class="text-xs font-pixel text-amber-400 mb-2">EDIT OATHS &amp; BONDS</div><h1 class="font-wiki-title text-3xl font-bold text-white">Amend Bonds &amp; Feuds</h1></div>
+                <div id="relations-editor-list" class="space-y-4">${world.relations.map(relation => `<div class="relation-entry bg-[#1a1a24] border border-[#323246] rounded p-4 space-y-2">
+                    <div class="grid gap-2 sm:grid-cols-3"><input class="relation-from bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="From" placeholder="First character" value="${escapeHtml(relation.from)}"><input class="relation-type bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Bond" placeholder="Bond or feud" value="${escapeHtml(relation.type)}"><input class="relation-to bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="To" placeholder="Second character" value="${escapeHtml(relation.to)}"></div>
+                    <textarea class="relation-desc w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Description" placeholder="The tale of their bond">${escapeHtml(relation.desc)}</textarea>
+                </div>`).join('')}</div>
+                <button onclick="addRelationEditor()" class="mt-3 text-amber-300 underline">+ Add a bond or feud</button>
+                <div class="flex gap-2 mt-6"><button onclick="saveRelations()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save bonds</button><button onclick="relationsEditing=false; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div></div>`;
+        }
+
+        function addRelationEditor() {
+            const row = document.createElement('div');
+            row.className = 'relation-entry bg-[#1a1a24] border border-[#323246] rounded p-4 space-y-2';
+            row.innerHTML = '<div class="grid gap-2 sm:grid-cols-3"><input class="relation-from bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="From" placeholder="First character"><input class="relation-type bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Bond" placeholder="Bond or feud"><input class="relation-to bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="To" placeholder="Second character"></div><textarea class="relation-desc w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Description" placeholder="The tale of their bond"></textarea>';
+            document.getElementById('relations-editor-list').appendChild(row);
+        }
+
+        function editRelations() {
+            relationsEditing = true;
+            renderWikiContent();
+        }
+
+        async function saveRelations() {
+            const world = worldsData.find(item => item.id === currentWorldId);
+            const previous = world.relations;
+            const relations = [];
+            for (const row of document.querySelectorAll('#relations-editor-list .relation-entry')) {
+                const from = row.querySelector('.relation-from').value.trim();
+                const to = row.querySelector('.relation-to').value.trim();
+                const type = row.querySelector('.relation-type').value.trim();
+                const desc = row.querySelector('.relation-desc').value.trim();
+                if (!from && !to && !type && !desc) continue;
+                if (!from || !to || !type) {
+                    showToast('* Each bond must name both characters and its nature.');
+                    return;
+                }
+                relations.push({ from, to, type, desc });
+            }
+            world.relations = relations;
+            try {
+                await saveWorld(world);
+                relationsEditing = false;
+                renderWiki();
+                showToast('* The bonds and feuds hath been amended.');
+            } catch (error) {
+                console.error('Could not save bonds:', error);
+                world.relations = previous;
+                showToast('* The bonds could not be saved.');
+            }
+        }
+
         function addCharacterProperty(name = '', value = '') {
             const row = document.createElement('div');
             row.className = 'grid grid-cols-2 gap-2';
@@ -1190,6 +1355,10 @@
             currentWorldId = worldId;
             currentArticleKey = 'world';
             articleEditing = false;
+            overviewEditing = false;
+            pageEditingKey = null;
+            lineagesEditing = false;
+            relationsEditing = false;
             renderWiki();
         }
 
@@ -1309,6 +1478,10 @@
             if (!world || !container) return;
 
             if (currentWikiTab === 'world') {
+                if (overviewEditing) {
+                    container.innerHTML = renderOverviewEditor(world);
+                    return;
+                }
                 container.innerHTML = `
                     <!-- Fandom-Style Article Header -->
                     <div class="border-b border-[#323244] pb-4 mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -1319,6 +1492,7 @@
                         <span class="font-wiki-body italic text-gray-400 text-base">
                             "Recorded by the Scribes of Cladar"
                         </span>
+                        <button onclick="editWorldOverview()" class="px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Edit overview</button>
                     </div>
 
                     <!-- Fandom Infobox + Main Lore Grid -->
@@ -1382,7 +1556,7 @@
                                         <span class="text-gray-300 text-right">${escapeHtml(world.sovereign)}</span>
                                     </div>
                                     <div class="px-4 py-2.5 flex justify-between">
-                                        <span class="font-bold text-amber-300/90">Inscribed Souls:</span>
+                                        <span class="font-bold text-amber-300/90">Characters:</span>
                                         <span class="text-gray-300 text-right">${world.characters.length}</span>
                                     </div>
                                 </div>
@@ -1398,13 +1572,14 @@
                             <h1 class="font-wiki-title text-3xl font-bold text-white">Characters of ${escapeHtml(world.name)}</h1>
                         </div>
                         <button onclick="openNewCharModal()" class="bg-amber-600 hover:bg-amber-500 text-black font-wiki-title font-bold text-xs px-4 py-2.5 rounded shadow transition-colors">
-                            + Inscribe New Soul
+                            + Inscribe New Character
                         </button>
                     </div>
 
                     <p class="font-wiki-body italic text-lg text-gray-300 mb-6">
                         "All the world’s a stage, and all the men and women merely players..."
                     </p>
+                    ${renderPageArticle(world, 'characters')}
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         ${world.characters.map(char => `
@@ -1425,17 +1600,20 @@
                                 </div>
                                 <div class="mt-4 pt-3 border-t border-[#2a2a3a] flex justify-between items-center text-xs font-wiki-title text-gray-500">
                                     <span>Character ID: #${escapeHtml(char.id.toUpperCase())}</span>
-                                    <button onclick="openCharacterArticle('${escapeHtml(char.id)}')" class="text-amber-400/70 underline">☼ Read article</button>
+                                    <div class="flex gap-3"><button onclick="editCharacter('${escapeHtml(char.id)}')" class="text-amber-300 underline">Edit details</button><button onclick="openCharacterArticle('${escapeHtml(char.id)}')" class="text-amber-400/70 underline">☼ Read article</button></div>
                                 </div>
                             </div>
                         `).join('')}
                     </div>
                 `;
             } else if (currentWikiTab === 'genealogy') {
+                if (lineagesEditing) {
+                    container.innerHTML = renderLineageEditor(world);
+                    return;
+                }
                 container.innerHTML = `
                     <div class="border-b border-[#323244] pb-4 mb-6">
-                        <div class="text-xs font-pixel text-amber-400 mb-1">LINEAGES &amp; BLOODLINES</div>
-                        <h1 class="font-wiki-title text-3xl font-bold text-white">Family Tree</h1>
+                        <div class="flex flex-wrap items-center justify-between gap-3"><div><div class="text-xs font-pixel text-amber-400 mb-1">LINEAGES &amp; BLOODLINES</div><h1 class="font-wiki-title text-3xl font-bold text-white">Family Tree</h1></div><button onclick="editLineages()" class="px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Edit lineages</button></div>
                     </div>
 
                     <p class="font-wiki-body italic text-lg text-gray-300 mb-8">
@@ -1507,12 +1685,16 @@
                             `).join('')}
                         </div>
                     </div>
+                    ${renderPageArticle(world, 'genealogy')}
                 `;
             } else if (currentWikiTab === 'relations') {
+                if (relationsEditing) {
+                    container.innerHTML = renderRelationsEditor(world);
+                    return;
+                }
                 container.innerHTML = `
                     <div class="border-b border-[#323244] pb-4 mb-6">
-                        <div class="text-xs font-pixel text-amber-400 mb-1">OATHS, BONDS &amp; FEUDS</div>
-                        <h1 class="font-wiki-title text-3xl font-bold text-white">Bonds &amp; Feuds</h1>
+                        <div class="flex flex-wrap items-center justify-between gap-3"><div><div class="text-xs font-pixel text-amber-400 mb-1">OATHS, BONDS &amp; FEUDS</div><h1 class="font-wiki-title text-3xl font-bold text-white">Bonds &amp; Feuds</h1></div><button onclick="editRelations()" class="px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Edit bonds</button></div>
                     </div>
 
                     <p class="font-wiki-body italic text-lg text-gray-300 mb-6">
@@ -1537,13 +1719,14 @@
                             </div>
                         `).join('')}
                     </div>
+                    ${renderPageArticle(world, 'relations')}
                 `;
             } else if (currentWikiTab === 'articles') {
                 container.innerHTML = renderArticlesTab(world);
-                attachArticleImages(container, world);
             } else if (currentWikiTab === 'graph') {
-                container.innerHTML = renderCharacterGraph(world);
+                container.innerHTML = renderCharacterGraph(world) + renderPageArticle(world, 'graph');
             }
+            attachArticleImages(container, world);
         }
 
         /* -------------------------------------------------------------------
@@ -1628,9 +1811,36 @@
 
         function openNewCharModal() {
             playBlip(580);
+            editingCharacterId = null;
+            document.getElementById('char-modal-title').textContent = 'Inscribe a New Character';
+            document.getElementById('char-save-button').textContent = 'Inscribe Character';
+            ['char-name', 'char-house', 'char-role', 'char-bio'].forEach(id => { document.getElementById(id).value = ''; });
+            document.getElementById('char-status').value = 'Living';
             document.getElementById('char-properties').innerHTML = '';
             addCharacterProperty('mother');
             addCharacterProperty('father');
+            document.getElementById('new-char-modal').classList.remove('hidden');
+        }
+
+        function editCharacter(id) {
+            const world = worldsData.find(item => item.id === currentWorldId);
+            const character = world.characters.find(item => item.id === id);
+            if (!character) return;
+            editingCharacterId = id;
+            document.getElementById('char-modal-title').textContent = 'Amend Character';
+            document.getElementById('char-save-button').textContent = 'Save Character';
+            document.getElementById('char-name').value = character.name;
+            document.getElementById('char-house').value = character.house;
+            document.getElementById('char-role').value = character.role;
+            document.getElementById('char-bio').value = character.bio;
+            document.getElementById('char-status').value = character.status;
+            document.getElementById('char-properties').innerHTML = '';
+            const properties = Object.entries(character.properties || {});
+            if (properties.length) properties.forEach(([key, value]) => addCharacterProperty(key, value));
+            else {
+                addCharacterProperty('mother');
+                addCharacterProperty('father');
+            }
             document.getElementById('new-char-modal').classList.remove('hidden');
         }
 
@@ -1639,11 +1849,12 @@
             document.getElementById('new-char-modal').classList.add('hidden');
         }
 
-        function saveNewCharacter() {
+        async function saveNewCharacter() {
             const name = document.getElementById('char-name').value.trim();
             const house = document.getElementById('char-house').value.trim() || 'Unaligned';
             const role = document.getElementById('char-role').value.trim() || 'Wanderer';
             const bio = document.getElementById('char-bio').value.trim() || 'A mysterious soul whose deeds are yet to be sung.';
+            const status = document.getElementById('char-status').value;
             const properties = {};
             document.querySelectorAll('#char-properties .grid').forEach(row => {
                 const key = row.querySelector('.property-name').value.trim();
@@ -1657,23 +1868,31 @@
             }
 
             const world = worldsData.find(w => w.id === currentWorldId);
-            if (world) {
-                world.characters.push({
-                    id: 'c' + (world.characters.length + 10),
-                    name,
-                    house,
-                    role,
-                    status: 'Living',
-                    bio,
-                    properties
-                });
+            const existing = editingCharacterId
+                ? world.characters.find(character => character.id === editingCharacterId)
+                : null;
+            const previous = existing ? { ...existing } : null;
+            const character = existing || {
+                id: `c${world.characters.length + 10}`,
+                article: ''
+            };
+            Object.assign(character, { name, house, role, status, bio, properties });
+            if (!existing) world.characters.push(character);
+            try {
+                await saveWorld(world);
+            } catch (error) {
+                console.error('Could not save character:', error);
+                if (existing) Object.assign(existing, previous);
+                else world.characters.pop();
+                showToast('* This character could not be saved to this device.');
+                return;
             }
-            persistWorlds();
 
             document.getElementById('char-name').value = '';
             document.getElementById('char-house').value = '';
             document.getElementById('char-role').value = '';
             document.getElementById('char-bio').value = '';
+            editingCharacterId = null;
 
             closeNewCharModal();
             renderWiki();
