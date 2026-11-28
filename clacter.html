@@ -656,41 +656,303 @@
         ------------------------------------------------------------------- */
         let worldsData = [
             {
-                id: 'meow',
-                name: 'Meow',
-                motto: 'Meow!',
-                era: 'Meow meow',
-                capital: 'Meow',
-                sovereign: 'Meow',
-                lore: `Meow meow meow.`,
+                id: 'france-revolution',
+                name: 'France in Revolution',
+                motto: 'A kingdom at the turning of an age.',
+                era: 'French Revolution, 1789–1799',
+                capital: 'Paris; the royal court was at Versailles until 1789',
+                sovereign: 'The monarchy was abolished on 21 September 1792',
+                lore: `This chronicle follows France from the closing years of Louis XV's reign into the French Revolution. Louis XV died in 1774, fifteen years before the Revolution began; he is shown here as the dynasty's predecessor, not as a participant in the Revolution. His grandson Louis XVI married Marie Antoinette in 1770, and both became central figures in the upheaval that began in 1789. The Estates-General met at Versailles, the Bastille fell on 14 July, and the royal family was brought from Versailles to Paris. The monarchy was abolished in 1792. Louis XVI was executed in January 1793 and Marie Antoinette in October of that year.`,
                 geography: [
-                    { name: 'Meow', desc: 'Meow.' },
-                    { name: 'Woof', desc: 'Woof.' }
+                    { name: 'Versailles', desc: 'The royal court and palace from which the royal family was brought to Paris in October 1789.' },
+                    { name: 'Paris', desc: 'The capital at the heart of revolutionary events, including the storming of the Bastille on 14 July 1789.' },
+                    { name: 'The Bastille', desc: 'The fortress-prison stormed by Parisians on 14 July 1789; its fall became a defining revolutionary symbol.' },
+                    { name: 'The Tuileries Palace', desc: 'The Paris residence of the royal family after their removal from Versailles; the palace was stormed on 10 August 1792.' }
                 ],
                 characters: [
                     {
-                        id: 'meow',
-                        name: 'Meow',
-                        house: 'House of Meow',
-                        role: 'Meow',
+                        id: 'louis-xv',
+                        name: 'Louis XV',
+                        house: 'House of Bourbon',
+                        role: 'King of France, 1715–1774',
                         status: 'Deceased',
-                        bio: 'Meow',
-                        article: `## Reign\nMwoq\n\n## Family\nmeow\n\n## Place in this chronicle\nmeow`,
+                        bio: 'Known as Louis the Beloved, he reigned from 1715 until his death in 1774. He was the grandfather of Louis XVI.',
+                        article: `## Reign\nLouis XV was King of France from 1715 until his death in 1774. He succeeded his great-grandfather Louis XIV at the age of five.\n\n## Family\nHis parents were Louis, Duke of Burgundy, and Marie Adélaïde of Savoy. He married Marie Leszczyńska; their son Louis, Dauphin of France, became the father of Louis XVI.\n\n## Place in this chronicle\nLouis XV died in 1774, before the French Revolution of 1789. He appears here as an ancestor and predecessor, not as a living ruler during the Revolution.`,
                         properties: {
-                            born: 'Meow',
-                            died: 'Woof',
-                            father: '@Meow',
-                            mother: '@Meow',
-                            spouse: '@Woof',
-                            son: '@Mouse',
-                            successor: '@Mewmew',
-                            reign: 'Woof woof'
+                            born: '15 February 1710, Versailles',
+                            died: '10 May 1774, Versailles',
+                            father: '@Louis_Duke_of_Burgundy',
+                            mother: '@Marie_Adelaide_of_Savoy',
+                            spouse: '@Marie_Leszczynska',
+                            son: '@Louis_Dauphin_of_France',
+                            successor: '@Louis_XVI',
+                            reign: '1715–1774'
                         }
-                    }
+                    },
+                    {
+                        id: 'louis-dauphin',
+                        name: 'Louis, Dauphin of France',
+                        house: 'House of Bourbon',
+                        role: 'Dauphin of France; heir to Louis XV',
+                        status: 'Deceased',
+                        bio: 'The only surviving son of Louis XV and Marie Leszczyńska; he died before his father and never became king.',
+                        properties: {
+                            born: '4 September 1729, Versailles',
+                            died: '20 December 1765, Fontainebleau',
+                            father: '@Louis_XV',
+                            mother: '@Marie_Leszczynska',
+                            spouse: '@Maria_Josepha_of_Saxony',
+                            son: '@Louis_XVI',
+                            title: 'Dauphin of France'
+                        }
+                    },
+                    {
+                        id: 'louis-xvi',
+                        name: 'Louis XVI',
+                        house: 'House of Bourbon',
+                        role: 'King of France, 1774–1792',
+                        status: 'Deceased',
+                        bio: 'Grandson of Louis XV, husband of Marie Antoinette, and the last king of France before the monarchy was abolished during the Revolution.',
+                        article: `## Life and reign\nBorn in 1754, Louis XVI became king in 1774. He married Archduchess Marie Antoinette of Austria in 1770, while both were still young. The monarchy was abolished on 21 September 1792.\n\n## Revolution\nLouis was tried by the National Convention and executed on 21 January 1793. His wife Marie Antoinette was executed later that year.`,
+                        properties: {
+                            born: '23 August 1754, Versailles',
+                            died: '21 January 1793, Paris',
+                            father: '@Louis_Dauphin_of_France',
+                            mother: '@Maria_Josepha_of_Saxony',
+                            spouse: '@Marie_Antoinette',
+                            child: '@Marie_Therese_Charlotte',
+                            reign: '1774–1792',
+                            house: 'Bourbon'
+                        }
+                    },
+                    {
+                        id: 'marie-antoinette',
+                        name: 'Marie Antoinette',
+                        house: 'House of Habsburg-Lorraine',
+                        role: 'Queen consort of France, 1774–1792',
+                        status: 'Deceased',
+                        bio: 'Born Maria Antonia in Vienna, she was the daughter of Maria Theresa and Francis I, Holy Roman Emperor. She married the future Louis XVI in 1770 and was queen consort from 1774 to 1792.',
+                        article: `## Early life\nBorn Maria Antonia in Vienna on 2 November 1755, she was a daughter of Maria Theresa, ruler of the Habsburg monarchy, and Francis I, Holy Roman Emperor. She married the future Louis XVI in 1770.\n\n## Queen of France\nMarie Antoinette became queen consort in 1774. During the Revolution, the royal family was brought from Versailles to Paris in 1789. The monarchy was abolished in 1792.\n\n## Imprisonment and death\nShe was tried by the Revolutionary Tribunal and executed in Paris on 16 October 1793.`,
+                        properties: {
+                            birthName: 'Maria Antonia',
+                            born: '2 November 1755, Vienna',
+                            died: '16 October 1793, Paris',
+                            father: '@Francis_I',
+                            mother: '@Maria_Theresa',
+                            spouse: '@Louis_XVI',
+                            eldestChild: '@Marie_Therese_Charlotte',
+                            son: '@Louis_Charles',
+                            title: 'Queen consort of France, 1774–1792',
+                            house: 'Habsburg-Lorraine'
+                        }
+                    },
+                    {
+                        id: 'maria-theresa',
+                        name: 'Maria Theresa',
+                        house: 'House of Habsburg-Lorraine',
+                        role: 'Archduchess of Austria and Queen of Hungary and Bohemia',
+                        status: 'Deceased',
+                        bio: 'Ruler of the Habsburg monarchy and mother of Marie Antoinette.',
+                        properties: {
+                            born: '13 May 1717, Vienna',
+                            died: '29 November 1780, Vienna',
+                            spouse: '@Francis_I',
+                            daughter: '@Marie_Antoinette',
+                            title: 'Habsburg ruler, 1740–1780'
+                        }
+                    },
+                    {
+                        id: 'francis-i',
+                        name: 'Francis I',
+                        house: 'House of Habsburg-Lorraine',
+                        role: 'Holy Roman Emperor, 1745–1765',
+                        status: 'Deceased',
+                        bio: 'Holy Roman Emperor and husband of Maria Theresa; their daughter Marie Antoinette became queen of France.',
+                        properties: {
+                            born: '8 December 1708, Nancy',
+                            died: '18 August 1765, Innsbruck',
+                            spouse: '@Maria_Theresa',
+                            daughter: '@Marie_Antoinette',
+                            title: 'Holy Roman Emperor'
+                        }
+                    },
+                    {
+                        id: 'marie-leszczynska',
+                        name: 'Marie Leszczyńska',
+                        house: 'House of Leszczyński',
+                        role: 'Queen consort of France, 1725–1768',
+                        status: 'Deceased',
+                        bio: 'Queen consort of Louis XV and mother of Louis, Dauphin of France.',
+                        properties: {
+                            born: '23 June 1703, Trzebnica',
+                            died: '24 June 1768, Versailles',
+                            spouse: '@Louis_XV',
+                            son: '@Louis_Dauphin_of_France',
+                            title: 'Queen consort of France'
+                        }
+                    },
+                    {
+                        id: 'louis-duke-burgundy',
+                        name: 'Louis, Duke of Burgundy',
+                        house: 'House of Bourbon',
+                        role: 'Dauphin of France',
+                        status: 'Deceased',
+                        bio: 'Son of the Grand Dauphin and father of Louis XV.',
+                        properties: {
+                            born: '16 August 1682, Versailles',
+                            died: '18 February 1712, Marly-le-Roi',
+                            spouse: '@Marie_Adelaide_of_Savoy',
+                            son: '@Louis_XV',
+                            title: 'Dauphin of France'
+                        }
+                    },
+                    {
+                        id: 'marie-adelaide-savoy',
+                        name: 'Marie Adélaïde of Savoy',
+                        house: 'House of Savoy',
+                        role: 'Dauphine of France',
+                        status: 'Deceased',
+                        bio: 'Dauphine of France and mother of Louis XV.',
+                        properties: {
+                            born: '6 December 1685, Turin',
+                            died: '12 February 1712, Versailles',
+                            spouse: '@Louis_Duke_of_Burgundy',
+                            son: '@Louis_XV',
+                            title: 'Dauphine of France'
+                        }
+                    },
+                    {
+                        id: 'maria-josepha-saxony',
+                        name: 'Maria Josepha of Saxony',
+                        house: 'House of Wettin',
+                        role: 'Dauphine of France',
+                        status: 'Deceased',
+                        bio: 'Second wife of Louis, Dauphin of France, and mother of Louis XVI.',
+                        properties: {
+                            born: '4 November 1731, Dresden',
+                            died: '13 March 1767, Versailles',
+                            spouse: '@Louis_Dauphin_of_France',
+                            son: '@Louis_XVI',
+                            title: 'Dauphine of France'
+                        }
+                    },
+                    {
+                        id: 'marie-therese-charlotte',
+                        name: 'Marie-Thérèse Charlotte',
+                        house: 'House of Bourbon',
+                        role: 'Daughter of Louis XVI and Marie Antoinette',
+                        status: 'Deceased',
+                        bio: 'The eldest child of Louis XVI and Marie Antoinette; she survived the Revolution and later became Duchess of Angoulême.',
+                        properties: {
+                            born: '19 December 1778, Versailles',
+                            died: '19 October 1851, Frohsdorf',
+                            father: '@Louis_XVI',
+                            mother: '@Marie_Antoinette',
+                            title: 'Duchess of Angoulême'
+                        }
+                    },
+                    {
+                        id: 'louis-joseph',
+                        name: 'Louis Joseph',
+                        house: 'House of Bourbon',
+                        role: 'Dauphin of France',
+                        status: 'Deceased',
+                        bio: 'Eldest son of Louis XVI and Marie Antoinette; he died in June 1789, shortly before the Revolution began.',
+                        properties: {
+                            born: '22 October 1781, Versailles',
+                            died: '4 June 1789, Meudon',
+                            father: '@Louis_XVI',
+                            mother: '@Marie_Antoinette',
+                            title: 'Dauphin of France'
+                        }
+                    },
+                    {
+                        id: 'louis-charles',
+                        name: 'Louis Charles',
+                        house: 'House of Bourbon',
+                        role: 'Dauphin; known to royalists as Louis XVII',
+                        status: 'Deceased',
+                        bio: 'Younger son of Louis XVI and Marie Antoinette. He died in captivity in 1795 and never reigned.',
+                        properties: {
+                            born: '27 March 1785, Versailles',
+                            died: '8 June 1795, Paris',
+                            father: '@Louis_XVI',
+                            mother: '@Marie_Antoinette',
+                            title: 'Dauphin of France'
+                        }
+                    },
+                    {
+                        id: 'sophie-beatrice',
+                        name: 'Sophie Hélène Béatrice',
+                        house: 'House of Bourbon',
+                        role: 'Daughter of Louis XVI and Marie Antoinette',
+                        status: 'Deceased',
+                        bio: 'Youngest child of Louis XVI and Marie Antoinette; she died in infancy.',
+                        properties: {
+                            born: '9 July 1786, Versailles',
+                            died: '19 June 1787, Versailles',
+                            father: '@Louis_XVI',
+                            mother: '@Marie_Antoinette'
+                        }
                     }
                 ],
                 genealogy: [],
-                relations: [],
+                relations: [
+                    {
+                        from: 'Louis XV',
+                        to: 'Louis, Dauphin of France',
+                        type: 'Father and son',
+                        desc: 'The Dauphin was the only surviving son of Louis XV and his heir, though he died before his father.'
+                    },
+                    {
+                        from: 'Louis, Dauphin of France',
+                        to: 'Louis XVI',
+                        type: 'Father and son',
+                        desc: 'Louis XVI succeeded his grandfather Louis XV in 1774.'
+                    },
+                    {
+                        from: 'Louis XVI',
+                        to: 'Marie Antoinette',
+                        type: 'Marriage',
+                        desc: 'They married in 1770; she became queen consort when he acceded in 1774.'
+                    },
+                    {
+                        from: 'Maria Theresa',
+                        to: 'Marie Antoinette',
+                        type: 'Mother and daughter',
+                        desc: 'Marie Antoinette was born Maria Theresa’s daughter in Vienna.'
+                    },
+                    {
+                        from: 'Francis I',
+                        to: 'Marie Antoinette',
+                        type: 'Father and daughter',
+                        desc: 'Francis I and Maria Theresa were Marie Antoinette’s parents.'
+                    },
+                    {
+                        from: 'Marie Antoinette',
+                        to: 'Marie-Thérèse Charlotte',
+                        type: 'Mother and daughter',
+                        desc: 'Marie-Thérèse Charlotte was the eldest child of the royal couple.'
+                    },
+                    {
+                        from: 'Marie Antoinette',
+                        to: 'Louis Joseph',
+                        type: 'Mother and son',
+                        desc: 'Louis Joseph was the Dauphin who died in June 1789.'
+                    },
+                    {
+                        from: 'Marie Antoinette',
+                        to: 'Louis Charles',
+                        type: 'Mother and son',
+                        desc: 'Louis Charles died in captivity in 1795.'
+                    },
+                    {
+                        from: 'Marie Antoinette',
+                        to: 'Sophie Hélène Béatrice',
+                        type: 'Mother and daughter',
+                        desc: 'Sophie died in infancy in 1787.'
+                    }
+                ],
                 pages: {
                     characters: `## The royal family\nChoose a name below to open its character page, then select **Edit** to amend the article, infobox, and custom properties together.\n\n## A note on chronology\nLouis XV died in 1774. He is included as Louis XVI’s grandfather and as the preceding Bourbon king, not as a participant in the Revolution.`,
                     genealogy: `## How to read these lineages\nEach entry shows a parent pair and their descendants. The Bourbon line joins Louis XV to Louis XVI through Louis, Dauphin of France. The Habsburg-Lorraine line shows Marie Antoinette’s parents, Francis I and Maria Theresa.`,
