@@ -112,6 +112,7 @@
         .article-content h3 { font-size: 1.25rem; }
         .article-content p { margin: .75rem 0; }
         .article-content img { max-width: 100%; }
+        .image-insert-dialog::backdrop { background: rgba(0, 0, 0, .8); }
         .wiki-nav-btn.active {
             background: #282832;
             color: #fde68a;
@@ -501,6 +502,31 @@
             </div>
         </div>
     </div>
+
+    <dialog id="image-insert-dialog" class="image-insert-dialog m-auto w-[min(94vw,38rem)] max-h-[90vh] overflow-y-auto rounded-lg border border-[#45455b] bg-[#181822] p-0 text-gray-100 shadow-2xl" aria-labelledby="image-insert-title" onclose="discardPendingArticleImage()">
+        <div class="p-5 sm:p-6">
+            <h2 id="image-insert-title" class="font-wiki-title text-2xl text-amber-300">Add a picture</h2>
+            <p class="mt-2 text-gray-300">Check the picture, add a short caption, and choose which side it should sit on.</p>
+            <img id="image-insert-preview" alt="Picture preview" class="mt-4 max-h-64 w-full rounded border border-[#3a3a4d] bg-black object-contain">
+            <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                <label class="text-sm text-amber-200">Caption
+                    <input id="image-insert-caption" type="text" maxlength="240" placeholder="What is in this picture?" class="mt-1 w-full rounded border border-[#3a3a4d] bg-[#0e0e14] px-3 py-2 text-base text-white focus:border-amber-400 focus:outline-none">
+                </label>
+                <label class="text-sm text-amber-200">Picture position
+                    <select id="image-insert-side" class="mt-1 w-full rounded border border-[#3a3a4d] bg-[#0e0e14] px-3 py-2 text-base text-white focus:border-amber-400 focus:outline-none">
+                        <option value="right">Right side</option>
+                        <option value="left">Left side</option>
+                    </select>
+                </label>
+            </div>
+            <p class="mt-3 text-sm text-gray-400">The caption appears below the picture. You can change it later by clicking it.</p>
+            <p id="image-insert-error" role="alert" class="mt-3 hidden text-sm text-red-300"></p>
+            <div class="mt-5 flex justify-end gap-3">
+                <button type="button" onclick="document.getElementById('image-insert-dialog').close()" class="min-h-11 rounded border border-gray-600 px-4 py-2 text-gray-200 hover:bg-[#282832]">Cancel</button>
+                <button id="image-insert-confirm" type="button" onclick="confirmArticleImage()" class="min-h-11 rounded bg-amber-500 px-4 py-2 font-semibold text-black hover:bg-amber-400">Add picture</button>
+            </div>
+        </div>
+    </dialog>
 
     <!-- Custom Notification Toast (Replaces alert()) -->
     <div id="toast-box" role="status" aria-live="polite" class="hidden fixed bottom-5 right-5 z-50 max-w-[calc(100vw-2.5rem)] bg-black border-2 border-yellow-300 text-yellow-300 font-vt text-xl px-4 py-3 shadow-lg">
@@ -940,6 +966,9 @@
         let pageEditingKey = null;
         let relationsEditing = false;
         let installPrompt = null;
+        let pendingArticleImage = null;
+        let pendingArticleImageRange = null;
+        const articleEditorImageUrls = new Set();
         const DB_NAME = 'clacter-worlds';
         const DB_VERSION = 1;
         const IMAGE_DB_KEY = id => `${id}`;
@@ -1162,10 +1191,11 @@
             return `<div class="visual-editor space-y-3">
                 <p class="text-sm text-gray-300">Click the words below to change them. Use a button to add a heading, text, or picture.</p>
                 <div role="toolbar" aria-label="Article formatting" class="flex flex-wrap gap-2 border-y border-[#3a3a4d] py-2">
-                    <button type="button" onmousedown="event.preventDefault()" onclick="insertEditorBlock('${editorId}','section')" class="border border-[#3a3a4d] rounded px-3 py-2 text-sm hover:border-amber-400">Add a heading</button>
-                    <button type="button" onmousedown="event.preventDefault()" onclick="insertEditorBlock('${editorId}','paragraph')" class="border border-[#3a3a4d] rounded px-3 py-2 text-sm hover:border-amber-400">Add text</button>
-                    <button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('bold')" class="border border-[#3a3a4d] rounded px-3 py-2 text-sm hover:border-amber-400"><strong>Bold text</strong></button>
-                    <label class="cursor-pointer border border-[#3a3a4d] rounded px-3 py-2 text-sm hover:border-amber-400">Add a picture<input type="file" accept="image/*" class="hidden" onchange="insertVisualImage(this.files[0],'${editorId}'); this.value='';"></label>
+                    <button type="button" onmousedown="event.preventDefault()" onclick="insertEditorBlock('${editorId}','section')" class="min-h-11 border border-[#3a3a4d] rounded px-3 py-2 text-sm hover:border-amber-400">Add a heading</button>
+                    <button type="button" onmousedown="event.preventDefault()" onclick="insertEditorBlock('${editorId}','paragraph')" class="min-h-11 border border-[#3a3a4d] rounded px-3 py-2 text-sm hover:border-amber-400">Add text</button>
+                    <button type="button" onmousedown="event.preventDefault()" onclick="document.execCommand('bold')" class="min-h-11 border border-[#3a3a4d] rounded px-3 py-2 text-sm hover:border-amber-400"><strong>Bold text</strong></button>
+                    <button type="button" onmousedown="event.preventDefault()" onclick="chooseArticleImage('${editorId}')" class="min-h-11 border border-[#3a3a4d] rounded px-3 py-2 text-sm hover:border-amber-400">Add a picture</button>
+                    <input id="image-file-${editorId}" type="file" accept="image/*" class="hidden" aria-label="Choose a picture" onchange="openArticleImageDialog(this.files[0],'${editorId}'); this.value='';">
                 </div>
                 <div id="${editorId}" class="article-content visual-article-editor min-h-64 border border-[#3a3a4d] rounded p-4 text-lg focus:outline-none focus:ring-2 focus:ring-amber-400" contenteditable="true" role="textbox" aria-label="Page text. Click to write." aria-multiline="true" spellcheck="true">${markdown ? renderArticleMarkdown(markdown, world, false) : '<p><br></p>'}</div>
             </div>`;
@@ -1192,7 +1222,10 @@
                 }
                 if (node.nodeType !== Node.ELEMENT_NODE) return;
                 if (node.tagName === 'FIGURE' && node.dataset.imageFile) {
-                    const caption = node.querySelector('figcaption')?.textContent.trim() || node.dataset.imageFile;
+                    const caption = node.querySelector('figcaption')?.textContent
+                        .replace(/[|\]\r\n]+/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .trim() || node.dataset.imageFile;
                     lines.push(`[[image:${node.dataset.imageFile}|${caption}|${node.dataset.imageSide || 'right'}]]`);
                 } else if (node.tagName === 'H1' || node.tagName === 'H2' || node.tagName === 'H3') {
                     const depth = '#'.repeat(Number(node.tagName[1]));
@@ -1215,15 +1248,7 @@
             return lines.join('\n\n');
         }
 
-        function insertEditorBlock(editorId, kind) {
-            const editor = document.getElementById(editorId);
-            if (!editor) return;
-            const heading = document.createElement(kind === 'section' ? 'h2' : 'p');
-            heading.textContent = kind === 'section' ? 'New heading' : 'Write here…';
-            const paragraph = kind === 'section' ? document.createElement('p') : null;
-            if (paragraph) paragraph.innerHTML = '<br>';
-            const selection = window.getSelection();
-            const selectedRange = selection?.rangeCount ? selection.getRangeAt(0) : null;
+        function insertEditorNode(editor, node, selectedRange) {
             const range = document.createRange();
             if (selectedRange && editor.contains(selectedRange.startContainer) && selectedRange.startContainer === editor) {
                 range.setStart(editor, selectedRange.startOffset);
@@ -1237,10 +1262,22 @@
                 }
             }
             range.collapse(true);
+            range.insertNode(node);
+        }
+
+        function insertEditorBlock(editorId, kind) {
+            const editor = document.getElementById(editorId);
+            if (!editor) return;
+            const heading = document.createElement(kind === 'section' ? 'h2' : 'p');
+            heading.textContent = kind === 'section' ? 'New heading' : 'Write here…';
+            const paragraph = kind === 'section' ? document.createElement('p') : null;
+            if (paragraph) paragraph.innerHTML = '<br>';
+            const selection = window.getSelection();
+            const selectedRange = selection?.rangeCount ? selection.getRangeAt(0) : null;
             const fragment = document.createDocumentFragment();
             fragment.append(heading);
             if (paragraph) fragment.append(paragraph);
-            range.insertNode(fragment);
+            insertEditorNode(editor, fragment, selectedRange);
             const caret = document.createRange();
             caret.selectNodeContents(heading);
             selection?.removeAllRanges();
@@ -1248,32 +1285,123 @@
             editor.focus();
         }
 
-        async function insertVisualImage(file, editorId) {
+        function chooseArticleImage(editorId) {
+            const editor = document.getElementById(editorId);
+            const input = document.getElementById(`image-file-${editorId}`);
+            if (!editor || !input) {
+                showToast('The picture controls are no longer available. Please reopen the editor.');
+                return;
+            }
+            const selection = window.getSelection();
+            const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+            pendingArticleImageRange = range && editor.contains(range.startContainer) ? range.cloneRange() : null;
+            input.click();
+        }
+
+        function openArticleImageDialog(file, editorId) {
             if (!file) return;
+            if (file.type && !file.type.startsWith('image/')) {
+                showToast('Choose an image file.');
+                return;
+            }
+            if (pendingArticleImage) discardPendingArticleImage();
+            const previewUrl = URL.createObjectURL(file);
+            pendingArticleImage = { file, editorId, previewUrl, range: pendingArticleImageRange };
+            pendingArticleImageRange = null;
+            const preview = document.getElementById('image-insert-preview');
+            const caption = document.getElementById('image-insert-caption');
+            const dialog = document.getElementById('image-insert-dialog');
+            const error = document.getElementById('image-insert-error');
+            preview.src = previewUrl;
+            caption.value = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
+            document.getElementById('image-insert-side').value = 'right';
+            const confirmButton = document.getElementById('image-insert-confirm');
+            confirmButton.disabled = false;
+            confirmButton.textContent = 'Add picture';
+            error.textContent = '';
+            error.classList.add('hidden');
+            if (typeof dialog.showModal !== 'function') {
+                discardPendingArticleImage();
+                showToast('Picture options are not supported in this browser.');
+                return;
+            }
+            dialog.showModal();
+            caption.focus();
+        }
+
+        function discardPendingArticleImage() {
+            const pending = pendingArticleImage;
+            if (pending && !articleEditorImageUrls.has(pending.previewUrl)) {
+                URL.revokeObjectURL(pending.previewUrl);
+            }
+            pendingArticleImage = null;
+            pendingArticleImageRange = null;
+            document.getElementById('image-insert-preview')?.removeAttribute('src');
+            if (pending) {
+                const editor = document.getElementById(pending.editorId);
+                const selection = window.getSelection();
+                if (editor && pending.range && editor.contains(pending.range.startContainer)) {
+                    selection?.removeAllRanges();
+                    selection?.addRange(pending.range);
+                }
+                editor?.focus();
+            }
+        }
+
+        async function confirmArticleImage() {
+            const pending = pendingArticleImage;
+            if (!pending) return;
             const world = worldsData.find(item => item.id === currentWorldId);
+            const editor = document.getElementById(pending.editorId);
+            const error = document.getElementById('image-insert-error');
+            const confirmButton = document.getElementById('image-insert-confirm');
+            confirmButton.disabled = true;
+            confirmButton.textContent = 'Adding picture…';
+            error.textContent = '';
+            error.classList.add('hidden');
             try {
-                const filename = await storeWorldImage(world, file);
-                const editor = document.getElementById(editorId);
+                const filename = await storeWorldImage(world, pending.file);
                 if (!editor) throw new Error('The article editor is no longer available.');
+                const side = document.getElementById('image-insert-side').value;
+                const captionText = document.getElementById('image-insert-caption').value
+                    .replace(/[|\]\r\n]+/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    || pending.file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim()
+                    || 'Picture';
                 const figure = document.createElement('figure');
                 figure.dataset.imageFile = filename;
-                figure.dataset.imageSide = 'right';
-                figure.className = 'article-image float-right ml-5 mb-4 max-w-[16rem] border border-[#3a3a4d] bg-[#1a1a24] p-2';
+                figure.dataset.imageSide = side;
+                figure.className = `article-image ${side === 'left' ? 'float-left mr-5' : 'float-right ml-5'} mb-4 max-w-[16rem] border border-[#3a3a4d] bg-[#1a1a24] p-2`;
                 const image = document.createElement('img');
-                image.src = URL.createObjectURL(file);
-                image.alt = filename;
+                image.src = pending.previewUrl;
+                image.alt = captionText;
                 image.className = 'w-full max-h-64 object-contain';
                 const caption = document.createElement('figcaption');
                 caption.className = 'text-center text-gray-300 text-sm mt-2';
-                caption.textContent = filename;
+                caption.textContent = captionText;
                 figure.append(image, caption);
+                const continuation = document.createElement('p');
+                continuation.innerHTML = '<br>';
+                const fragment = document.createDocumentFragment();
+                fragment.append(figure, continuation);
+                insertEditorNode(editor, fragment, pending.range);
+                articleEditorImageUrls.add(pending.previewUrl);
                 const selection = window.getSelection();
-                const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
-                if (range && editor.contains(range.startContainer)) range.insertNode(figure);
-                else editor.append(figure);
+                const caret = document.createRange();
+                caret.selectNodeContents(continuation);
+                caret.collapse(false);
+                selection?.removeAllRanges();
+                selection?.addRange(caret);
+                pendingArticleImage = null;
+                document.getElementById('image-insert-dialog').close();
+                editor.focus();
             } catch (error) {
-                console.error('Could not insert image:', error);
-                showToast('Could not add this picture.');
+                console.error('Could not insert picture:', error);
+                confirmButton.disabled = false;
+                confirmButton.textContent = 'Add picture';
+                error.textContent = 'Could not add this picture. Please try again.';
+                error.classList.remove('hidden');
             }
         }
 
@@ -1871,6 +1999,8 @@
             const world = worldsData.find(w => w.id === currentWorldId);
             const container = document.getElementById('wiki-content-area');
             if (!world || !container) return;
+            articleEditorImageUrls.forEach(url => URL.revokeObjectURL(url));
+            articleEditorImageUrls.clear();
 
             if (currentWikiTab === 'world') {
                 if (overviewEditing) {
