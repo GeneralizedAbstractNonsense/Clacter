@@ -371,6 +371,7 @@
                 <div class="absolute right-0 top-full mt-1 min-w-44 bg-[#181822] border border-[#3a3a4d] rounded shadow-lg p-1 flex flex-col z-50">
                     <button onclick="exportWorld(); this.closest('details').open=false" class="text-left px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Save a copy (ZIP)</button>
                     <label class="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Open a world file (ZIP)<input id="world-zip-input" type="file" accept=".zip,application/zip" class="hidden" onchange="importWorldZip(this.files[0]); this.closest('details').open=false"></label>
+                    <label class="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Import a character (ZIP)<input id="character-zip-input" type="file" accept=".zip,application/zip" class="hidden" onchange="importCharacterZip(this.files[0]); this.closest('details').open=false"></label>
                     <label class="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Import a Google Doc<input id="docs-input" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden" onchange="convertGoogleDoc(this.files[0]); this.closest('details').open=false"></label>
                     <button id="install-app" onclick="installApp(); this.closest('details').open=false" class="hidden text-left px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Add to this device</button>
                 </div>
@@ -1437,7 +1438,7 @@
             return record?.blob || null;
         }
 
-        async function storeWorldImage(world, file, preferredName = file.name) {
+        function uniqueWorldImageFilename(world, preferredName) {
             const baseName = preferredName.replace(/[\\/:*?"<>|\[\]]/g, '_');
             let filename = baseName;
             const dot = baseName.lastIndexOf('.');
@@ -1447,6 +1448,11 @@
             while ((world.images || []).some(image => image.filename === filename)) {
                 filename = `${stem}-${suffix++}${extension}`;
             }
+            return filename;
+        }
+
+        async function storeWorldImage(world, file, preferredName = file.name) {
+            const filename = uniqueWorldImageFilename(world, preferredName);
             const id = `${world.id}:${filename}`;
             const image = { id, filename, size: file.size, type: file.type };
             if (file.size > 64 * 1024 * 1024 && navigator.storage?.getDirectory) {
@@ -1940,7 +1946,10 @@
                   </div>`
                 : `<div class="flex flex-wrap items-start justify-between gap-4 border-b border-[#323244] pb-4 mb-6">
                        <div><button onclick="setWikiTab('characters')" class="text-sm text-amber-300 underline mb-3">← Back to people</button><div class="text-xs text-amber-400 mb-1">CHARACTER</div><h1 class="font-wiki-title text-3xl font-bold text-white">${escapeHtml(character.name)}</h1><p class="text-gray-400 mt-1">${escapeHtml(character.role || '')}</p></div>
-                       <button onclick="editArticle()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Edit page</button>
+                       <div class="flex flex-wrap gap-2">
+                           <button onclick="exportCharacter('${escapeHtml(character.id)}')" aria-label="Download character as ZIP" title="Download this person and their pictures" class="px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Download character</button>
+                           <button onclick="editArticle()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Edit page</button>
+                       </div>
                    </div>
                    <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem]">
                        <article class="article-content leading-relaxed text-lg">${renderArticleMarkdown(article, world)}</article>
@@ -2304,6 +2313,258 @@
             closeNewCharModal();
             renderWiki();
             showToast(`Added ${name}.`);
+        }
+
+        function getCharacterImageReferences(character) {
+            const text = `${character.article || ''}\n${character.bio || ''}`;
+            return [...new Set([...text.matchAll(/\[\[image:([^|\]]+)/gi)]
+                .map(match => match[1].trim())
+                .filter(Boolean))];
+        }
+
+        function uniqueImportedCharacterName(world, originalName) {
+            const existing = new Set(world.characters.map(character => characterSlug(character.name)));
+            if (!existing.has(characterSlug(originalName))) return originalName;
+            let suffix = 2;
+            let name = `${originalName} (${suffix})`;
+            while (existing.has(characterSlug(name))) name = `${originalName} (${++suffix})`;
+            return name;
+        }
+
+        function rewriteImportedSelfMentions(text, originalName, newName) {
+            if (originalName === newName || !text) return text || '';
+            const originalSlug = characterSlug(originalName);
+            const mentionName = newName.replace(/[^\p{L}\d_-]+/gu, '_').replace(/^_+|_+$/g, '');
+            return text.replace(/@([\p{L}\d_-]+)/gu, (mention, name) =>
+                characterSlug(name.replace(/_/g, ' ')) === originalSlug ? `@${mentionName}` : mention
+            );
+        }
+
+        function replaceCharacterImageReferences(text, filenames) {
+            return String(text || '').replace(/\[\[image:([^|\]]+)/gi, (reference, filename) => {
+                const replacement = filenames.get(filename.trim());
+                return replacement ? `[[image:${replacement}` : reference;
+            });
+        }
+
+        async function storeCharacterArchiveImage(world, entry, preferredName) {
+            const filename = uniqueWorldImageFilename(world, preferredName);
+            const image = {
+                id: `${world.id}:${filename}`,
+                filename,
+                size: entry.uncompressedSize || 0,
+                type: ''
+            };
+            if (image.size > 64 * 1024 * 1024) {
+                if (!navigator.storage?.getDirectory) {
+                    throw new Error(`This browser cannot store the large picture ${filename}.`);
+                }
+                const root = await navigator.storage.getDirectory();
+                const path = `${Date.now()}-${filename}`;
+                const handle = await root.getFileHandle(path, { create: true });
+                const writable = await handle.createWritable();
+                await entry.getData(new zip.WritableWriter(writable));
+                image.storage = 'opfs';
+                image.path = path;
+            } else {
+                const blob = await entry.getData(new zip.BlobWriter());
+                image.size = blob.size;
+                image.type = blob.type;
+                const db = await openDatabase();
+                await new Promise((resolve, reject) => {
+                    const request = db.transaction('images', 'readwrite').objectStore('images').put({ id: image.id, blob });
+                    request.onsuccess = resolve;
+                    request.onerror = () => reject(request.error);
+                });
+                db.close();
+                image.storage = 'idb';
+            }
+            world.images ||= [];
+            world.images.push(image);
+            return image;
+        }
+
+        async function removeStoredWorldImage(image) {
+            if (image.storage === 'opfs' && navigator.storage?.getDirectory) {
+                const root = await navigator.storage.getDirectory();
+                await root.removeEntry(image.path);
+                return;
+            }
+            const db = await openDatabase();
+            await new Promise((resolve, reject) => {
+                const request = db.transaction('images', 'readwrite').objectStore('images').delete(image.id);
+                request.onsuccess = resolve;
+                request.onerror = () => reject(request.error);
+            });
+            db.close();
+        }
+
+        async function exportCharacter(characterId) {
+            const world = worldsData.find(item => item.id === currentWorldId);
+            const character = world?.characters.find(item => item.id === characterId);
+            if (!character) {
+                showToast('Could not find this character.');
+                return;
+            }
+            if (!window.zip) {
+                showToast('The ZIP tool did not load.');
+                return;
+            }
+            let zipWriter;
+            try {
+                const filenames = getCharacterImageReferences(character);
+                const images = filenames.map(filename => {
+                    const image = (world.images || []).find(item => item.filename === filename);
+                    if (!image) throw new Error(`The picture ${filename} is missing from this world.`);
+                    return image;
+                });
+                const totalBytes = images.reduce((sum, image) => sum + image.size, 0);
+                if (totalBytes > 1024 ** 3 && !window.showSaveFilePicker) {
+                    throw new Error('Large character archives need a browser that can save large files.');
+                }
+                const baseName = character.name.replace(/[^a-z0-9-_ ]/gi, '').trim() || 'character';
+                let writer;
+                if (window.showSaveFilePicker) {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: `${baseName}.zip`,
+                        types: [{ description: 'ZIP archive', accept: { 'application/zip': ['.zip'] } }]
+                    });
+                    writer = new zip.WritableWriter(await handle.createWritable());
+                } else {
+                    writer = new zip.BlobWriter('application/zip');
+                }
+                zipWriter = new zip.ZipWriter(writer, { zip64: true });
+                const portableCharacter = JSON.parse(JSON.stringify(character));
+                const manifest = JSON.stringify({
+                    format: 'clacter-character',
+                    version: 1,
+                    character: portableCharacter,
+                    images: images.map(({ filename, size, type }) => ({ filename, size, type }))
+                }, null, 2);
+                await zipWriter.add('character.json', new zip.TextReader(manifest));
+                for (const image of images) {
+                    const blob = await readWorldImage(world, image.filename);
+                    if (!blob) throw new Error(`The picture ${image.filename} could not be read.`);
+                    await zipWriter.add(`images/${image.filename}`, new zip.BlobReader(blob), { level: 0 });
+                }
+                const result = await zipWriter.close();
+                if (result instanceof Blob) {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(result);
+                    link.download = `${baseName}.zip`;
+                    link.click();
+                    setTimeout(() => URL.revokeObjectURL(link.href), 60000);
+                }
+                showToast(`Downloaded ${character.name}.`);
+            } catch (error) {
+                console.error('Character export failed:', error);
+                showToast(`Could not download this character: ${error.message}`);
+            }
+        }
+
+        async function importCharacterZip(file) {
+            if (!file) return;
+            if (!window.zip) {
+                showToast('The ZIP tool did not load.');
+                return;
+            }
+            const world = worldsData.find(item => item.id === currentWorldId);
+            if (!world) {
+                showToast('Choose a world before importing a character.');
+                return;
+            }
+            let reader;
+            const previousImages = [...(world.images || [])];
+            const importedImages = [];
+            let characterAdded = false;
+            let character;
+            try {
+                reader = new zip.ZipReader(new zip.BlobReader(file));
+                const entries = await reader.getEntries();
+                const characterEntry = entries.find(entry => entry.filename.toLowerCase() === 'character.json');
+                if (!characterEntry) throw new Error('This ZIP does not contain character.json.');
+                const data = JSON.parse(await characterEntry.getData(new zip.TextWriter()));
+                const source = data?.character;
+                if (data?.format !== 'clacter-character' || data?.version !== 1
+                    || !source || typeof source !== 'object' || Array.isArray(source)
+                    || typeof source.name !== 'string' || !source.name.trim()) {
+                    throw new Error('This ZIP does not contain a valid character.');
+                }
+                const originalName = source.name.trim();
+                const name = uniqueImportedCharacterName(world, originalName);
+                const properties = source.properties && typeof source.properties === 'object' && !Array.isArray(source.properties)
+                    ? Object.fromEntries(Object.entries(source.properties).filter(([key, value]) => key.trim() && typeof value === 'string'))
+                    : {};
+                character = {
+                    ...source,
+                    id: `imported-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                    name,
+                    house: typeof source.house === 'string' ? source.house : '',
+                    role: typeof source.role === 'string' ? source.role : '',
+                    status: typeof source.status === 'string' ? source.status : 'Unknown',
+                    bio: typeof source.bio === 'string' ? source.bio : '',
+                    article: typeof source.article === 'string' ? source.article : '',
+                    properties
+                };
+                if (name !== originalName) {
+                    character.article = rewriteImportedSelfMentions(character.article, originalName, name);
+                    character.bio = rewriteImportedSelfMentions(character.bio, originalName, name);
+                }
+
+                const archiveImages = new Map();
+                for (const entry of entries) {
+                    if (!entry.filename.startsWith('images/')) continue;
+                    const filename = entry.filename.slice('images/'.length).split('/').pop();
+                    if (!filename || filename === '.' || filename === '..') continue;
+                    if (archiveImages.has(filename)) throw new Error(`The ZIP contains two pictures named ${filename}.`);
+                    archiveImages.set(filename, entry);
+                }
+                const imageReferences = getCharacterImageReferences(character);
+                for (const filename of imageReferences) {
+                    if (!archiveImages.has(filename)) throw new Error(`The ZIP is missing the picture ${filename}.`);
+                }
+                const importedFilenames = new Map();
+                for (const filename of imageReferences) {
+                    const image = await storeCharacterArchiveImage(world, archiveImages.get(filename), filename);
+                    importedImages.push(image);
+                    importedFilenames.set(filename, image.filename);
+                }
+                character.article = replaceCharacterImageReferences(character.article, importedFilenames);
+                character.bio = replaceCharacterImageReferences(character.bio, importedFilenames);
+                await reader.close();
+                reader = null;
+                world.characters.push(character);
+                characterAdded = true;
+                await saveWorld(world);
+                currentArticleKey = character.id;
+                currentWikiTab = 'articles';
+                articleEditing = false;
+                pageEditingKey = null;
+                renderWiki();
+                document.getElementById('character-zip-input').value = '';
+                showToast(name === originalName ? `Imported ${name}.` : `Imported as "${name}" to avoid a duplicate name.`);
+            } catch (error) {
+                if (importedImages.length || characterAdded) {
+                    if (characterAdded) world.characters = world.characters.filter(item => item.id !== character.id);
+                    world.images = previousImages;
+                    for (const image of importedImages) {
+                        try {
+                            await removeStoredWorldImage(image);
+                        } catch (cleanupError) {
+                            console.error(`Could not remove imported picture ${image.filename}:`, cleanupError);
+                        }
+                    }
+                    try {
+                        await saveWorld(world);
+                    } catch (saveError) {
+                        console.error('Could not restore the world after a failed character import:', saveError);
+                    }
+                }
+                if (reader) await reader.close().catch(closeError => console.error('Could not close character archive:', closeError));
+                console.error('Character import failed:', error);
+                document.getElementById('character-zip-input').value = '';
+                showToast(`Could not import this character: ${error.message}`);
+            }
         }
 
         async function exportWorld() {
