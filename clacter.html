@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CLACTER</title>
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="clacter-icon.svg">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Press Start 2P (Pixel), VT323 (Retro Terminal), Cinzel & Crimson Text (Fandom Wiki feel) -->
@@ -12,6 +17,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
     <!-- Tone.js for subtle Undertale-style 8-bit blips -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.57/dist/zip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
 
     <style>
         /* Custom Pixel */
@@ -35,6 +42,8 @@
             overflow-x: hidden;
             user-select: none;
         }
+
+        input, textarea, select { user-select: text; }
 
         .font-pixel {
             font-family: 'Press Start 2P', cursive;
@@ -74,17 +83,25 @@
             transform: scale(1.02);
         }
 
-        .ut-btn:hover .ut-soul {
+        .ut-btn:hover .ut-sun {
             opacity: 1;
         }
 
-        .ut-soul {
+        .ut-sun {
             opacity: 0;
-            display: inline-block;
-            color: #ff0000;
+            display: inline-flex;
+            width: 16px;
+            height: 16px;
             margin-right: 8px;
             transition: opacity 0.1s;
+            image-rendering: pixelated;
         }
+
+        .article-editor { user-select: text; }
+        .article-content { user-select: text; overflow-wrap: anywhere; }
+        .article-content h2, .article-content h3 { font-family: 'Cinzel', serif; color: #fbbf24; margin: 1.25rem 0 .5rem; }
+        .article-content p { margin: .75rem 0; }
+        .article-content img { max-width: 100%; }
 
         /* Floating & Glowing Animations for Lanterns and Pumpkins */
         @keyframes floatLantern {
@@ -252,18 +269,20 @@
 
         <!-- CENTERPIECE: TITLE -->
         <div class="text-center mb-10 sm:mb-12 relative">
-            <!-- Pixel Heart Emblem -->
+            <!-- Pixel Sun Emblem -->
             <div class="flex justify-center mb-4">
                 <svg class="animate-pulse" width="28" height="26" viewBox="0 0 16 16" shape-rendering="crispEdges">
-                    <rect x="2" y="2" width="4" height="2" fill="#ff0000"/>
-                    <rect x="10" y="2" width="4" height="2" fill="#ff0000"/>
-                    <rect x="1" y="4" width="6" height="2" fill="#ff0000"/>
-                    <rect x="9" y="4" width="6" height="2" fill="#ff0000"/>
-                    <rect x="1" y="6" width="14" height="3" fill="#ff0000"/>
-                    <rect x="2" y="9" width="12" height="2" fill="#ff0000"/>
-                    <rect x="4" y="11" width="8" height="2" fill="#ff0000"/>
-                    <rect x="6" y="13" width="4" height="2" fill="#ff0000"/>
-                    <rect x="7" y="15" width="2" height="1" fill="#ff0000"/>
+                    <rect x="7" y="0" width="2" height="2" fill="#fff176"/>
+                    <rect x="7" y="14" width="2" height="2" fill="#ff9800"/>
+                    <rect x="0" y="7" width="2" height="2" fill="#ff9800"/>
+                    <rect x="14" y="7" width="2" height="2" fill="#fff176"/>
+                    <rect x="3" y="2" width="2" height="2" fill="#ffb300"/>
+                    <rect x="11" y="2" width="2" height="2" fill="#ffb300"/>
+                    <rect x="3" y="12" width="2" height="2" fill="#ff9800"/>
+                    <rect x="11" y="12" width="2" height="2" fill="#ff9800"/>
+                    <rect x="4" y="4" width="8" height="8" fill="#ffb300"/>
+                    <rect x="5" y="5" width="6" height="6" fill="#fff176"/>
+                    <rect x="6" y="6" width="4" height="4" fill="#ffe082"/>
                 </svg>
             </div>
 
@@ -300,7 +319,7 @@
 
                     <div class="flex items-end">
                         <button onclick="enterSelectedWorld()" onmouseenter="playBlip(440)" class="ut-btn w-full sm:w-auto font-pixel text-xs sm:text-sm px-5 py-3.5 flex items-center justify-center">
-                            <span class="ut-soul">♥</span> ENTER REALM
+                            <span class="ut-sun" aria-hidden="true"><svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#ff9800" d="M7 0h2v3H7zM7 13h2v3H7zM0 7h3v2H0zM13 7h3v2h-3zM2 2h3v3H2zM11 2h3v3h-3zM2 11h3v3H2zM11 11h3v3h-3z"/><path fill="#ffca28" d="M4 4h8v8H4z"/><path fill="#fff176" d="M5 5h6v6H5z"/><path fill="#fffde7" d="M7 6h2v4H7z"/></svg></span> ENTER REALM
                         </button>
                     </div>
                 </div>
@@ -314,7 +333,7 @@
                         * Dost thou wish to birth a new universe?
                     </span>
                     <button onclick="openNewWorldModal()" onmouseenter="playBlip(440)" class="ut-btn font-pixel text-xs px-4 py-3 flex items-center">
-                        <span class="ut-soul">♥</span> + FORGE NEW REALM
+                        <span class="ut-sun" aria-hidden="true"><svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#ff9800" d="M7 0h2v3H7zM7 13h2v3H7zM0 7h3v2H0zM13 7h3v2h-3zM2 2h3v3H2zM11 2h3v3h-3zM2 11h3v3H2zM11 11h3v3h-3z"/><path fill="#ffca28" d="M4 4h8v8H4z"/><path fill="#fff176" d="M5 5h6v6H5z"/><path fill="#fffde7" d="M7 6h2v4H7z"/></svg></span> + FORGE NEW REALM
                     </button>
                 </div>
             </div>
@@ -366,12 +385,18 @@
                 <select id="wiki-world-switcher" onchange="switchWikiWorld(this.value)" class="bg-[#0e0e14] border border-[#3a3a4d] text-amber-200 font-wiki-body text-base px-3 py-1.5 rounded focus:outline-none focus:border-amber-400">
                 </select>
             </div>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="exportWorld()" class="border border-amber-500/60 text-amber-200 px-3 py-1.5 rounded font-wiki-title text-xs">Export ZIP</button>
+                <label class="border border-amber-500/60 text-amber-200 px-3 py-1.5 rounded font-wiki-title text-xs cursor-pointer">Import ZIP<input id="world-zip-input" type="file" accept=".zip,application/zip" class="hidden" onchange="importWorldZip(this.files[0])"></label>
+                <label class="border border-amber-500/60 text-amber-200 px-3 py-1.5 rounded font-wiki-title text-xs cursor-pointer">Google Docs<input id="docs-input" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden" onchange="convertGoogleDoc(this.files[0])"></label>
+                <button id="install-app" onclick="installApp()" class="hidden border border-amber-500/60 text-amber-200 px-3 py-1.5 rounded font-wiki-title text-xs">Install app</button>
+            </div>
         </header>
 
         <!-- Main Wiki Container: Fandom Left Sidebar + Article Content -->
         <div class="flex-1 flex flex-col md:flex-row max-w-[1440px] w-full mx-auto">
 
-            <!-- LEFT SIDEBAR (Exact Tabs Requested: World, Characters, Albero genealogico, Relazioni) -->
+            <!-- LEFT SIDEBAR -->
             <aside class="w-full md:w-64 lg:w-72 bg-[#16161f] border-b md:border-b-0 md:border-r border-[#2e2e3e] p-4 sm:p-5 shrink-0">
                 <div class="mb-4 pb-2 border-b border-[#2e2e3e]">
                     <span class="font-pixel text-[10px] text-amber-400 tracking-wider uppercase">
@@ -400,7 +425,7 @@
                     <button onclick="setWikiTab('genealogy')" id="tab-genealogy" class="wiki-nav-btn flex items-center gap-3 px-4 py-3 rounded text-left font-wiki-title font-semibold text-sm sm:text-base transition-all text-gray-300 hover:bg-[#222230] border border-transparent whitespace-nowrap">
                         <span class="text-lg">🌳</span>
                         <div>
-                            <div>Albero genealogico</div>
+                            <div>Family Tree</div>
                             <div class="text-[11px] font-wiki-body font-normal text-gray-400 hidden md:block">Bloodlines &amp; Houses</div>
                         </div>
                     </button>
@@ -408,9 +433,15 @@
                     <button onclick="setWikiTab('relations')" id="tab-relations" class="wiki-nav-btn flex items-center gap-3 px-4 py-3 rounded text-left font-wiki-title font-semibold text-sm sm:text-base transition-all text-gray-300 hover:bg-[#222230] border border-transparent whitespace-nowrap">
                         <span class="text-lg">⚔️</span>
                         <div>
-                            <div>Relazioni</div>
+                            <div>Bonds &amp; Feuds</div>
                             <div class="text-[11px] font-wiki-body font-normal text-gray-400 hidden md:block">Oaths, Bonds &amp; Feuds</div>
                         </div>
+                    </button>
+                    <button onclick="setWikiTab('articles')" id="tab-articles" class="wiki-nav-btn flex items-center gap-3 px-4 py-3 rounded text-left font-wiki-title font-semibold text-sm sm:text-base transition-all text-gray-300 hover:bg-[#222230] border border-transparent whitespace-nowrap">
+                        <span class="text-lg">📜</span><div><div>Articles</div><div class="text-[11px] font-wiki-body font-normal text-gray-400 hidden md:block">The Scribes’ Quill</div></div>
+                    </button>
+                    <button onclick="setWikiTab('graph')" id="tab-graph" class="wiki-nav-btn flex items-center gap-3 px-4 py-3 rounded text-left font-wiki-title font-semibold text-sm sm:text-base transition-all text-gray-300 hover:bg-[#222230] border border-transparent whitespace-nowrap">
+                        <span class="text-lg">🕸️</span><div><div>Character Links</div><div class="text-[11px] font-wiki-body font-normal text-gray-400 hidden md:block">Threads of Fate</div></div>
                     </button>
                 </nav>
 
@@ -421,7 +452,7 @@
                     </h4>
                     <ul class="space-y-2 font-wiki-body text-base text-gray-300">
                         <li class="flex justify-between">
-                            <span>Inscribed Souls:</span>
+                            <span>Characters:</span>
                             <span id="stat-chars" class="font-bold text-amber-300">0</span>
                         </li>
                         <li class="flex justify-between">
@@ -477,7 +508,7 @@
                     CANCEL
                 </button>
                 <button onclick="createNewWorld()" class="ut-btn font-pixel text-xs px-4 py-2.5 border-yellow-300 text-yellow-300">
-                    ♥ BIRTH REALM
+                    BIRTH REALM
                 </button>
             </div>
         </div>
@@ -489,7 +520,7 @@
     <div id="new-char-modal" class="hidden fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4">
         <div class="bg-[#1b1b26] border-2 border-amber-500 rounded-lg w-full max-w-lg p-6 text-gray-100 shadow-2xl">
             <h3 class="font-wiki-title text-xl font-bold text-amber-400 mb-2">
-                Inscribe a New Soul
+                Inscribe a New Character
             </h3>
             <p class="font-wiki-body italic text-gray-300 mb-4">
                 Chronicle a hero, monarch, or villain into the annals of this realm.
@@ -514,6 +545,11 @@
                     <label class="block text-sm font-wiki-title text-amber-300">Mortal Chronicle (Bio)</label>
                     <textarea id="char-bio" rows="3" placeholder="Born beneath a weeping comet, she swore..." class="w-full bg-[#111118] border border-[#3a3a4d] rounded px-3 py-1.5 text-white focus:border-amber-400 focus:outline-none"></textarea>
                 </div>
+                <div>
+                    <label class="block text-sm font-wiki-title text-amber-300">Kinship &amp; Custom Properties</label>
+                    <div id="char-properties" class="space-y-2 mt-1"></div>
+                    <button type="button" onclick="addCharacterProperty()" class="mt-2 text-amber-300 underline text-sm">+ Add a property</button>
+                </div>
             </div>
 
             <div class="flex justify-end gap-3 mt-6">
@@ -521,7 +557,7 @@
                     Dismiss
                 </button>
                 <button onclick="saveNewCharacter()" class="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-black font-bold font-wiki-title text-xs">
-                    Inscribe Soul
+                    Inscribe Character
                 </button>
             </div>
         </div>
@@ -782,6 +818,314 @@
 
         let currentWorldId = worldsData[0].id;
         let currentWikiTab = 'world';
+        let currentArticleKey = 'world';
+        let articleEditing = false;
+        let installPrompt = null;
+        const DB_NAME = 'clacter-worlds';
+        const DB_VERSION = 1;
+        const IMAGE_DB_KEY = id => `${id}`;
+
+        function openDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = () => {
+                    const db = request.result;
+                    if (!db.objectStoreNames.contains('worlds')) db.createObjectStore('worlds', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('images')) db.createObjectStore('images', { keyPath: 'id' });
+                };
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function saveWorld(world) {
+            const db = await openDatabase();
+            await new Promise((resolve, reject) => {
+                const request = db.transaction('worlds', 'readwrite').objectStore('worlds').put(world);
+                request.onsuccess = resolve;
+                request.onerror = () => reject(request.error);
+            });
+            db.close();
+        }
+
+        async function persistWorlds() {
+            try {
+                await Promise.all(worldsData.map(saveWorld));
+            } catch (error) {
+                console.error('Could not save this chronicle:', error);
+                showToast('* Thy changes could not be saved; check this device’s storage.');
+            }
+        }
+
+        async function loadSavedWorlds() {
+            const db = await openDatabase();
+            const saved = await new Promise((resolve, reject) => {
+                const request = db.transaction('worlds').objectStore('worlds').getAll();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+            db.close();
+            if (saved.length) worldsData = saved;
+            worldsData.forEach(world => {
+                world.characters ||= [];
+                world.geography ||= [];
+                world.genealogy ||= [];
+                world.relations ||= [];
+                world.images ||= [];
+                world.article ||= '';
+                world.characters.forEach(character => { character.properties ||= {}; });
+            });
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[char]);
+        }
+
+        function characterSlug(value) {
+            return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+        }
+
+        function resolveCharacterReference(world, value) {
+            const slug = characterSlug(String(value).replace(/^@/, '').replace(/_/g, ' '));
+            return world.characters.find(character =>
+                characterSlug(character.name) === slug ||
+                character.name.split(/\s+/).some(part => characterSlug(part) === slug)
+            );
+        }
+
+        function renderArticleMarkdown(markdown, world) {
+            const characterBySlug = new Map();
+            world.characters.forEach(character => {
+                characterBySlug.set(characterSlug(character.name), character);
+                character.name.split(/\s+/).forEach(part => characterBySlug.set(characterSlug(part), character));
+            });
+            let inList = false;
+            const output = [];
+            for (const line of String(markdown || '').split(/\r?\n/)) {
+                const image = line.match(/^\[\[image:([^|\]]+)(?:\|([^|\]]*))?(?:\|(left|right))?\]\]$/i);
+                if (image) {
+                    if (inList) { output.push('</ul>'); inList = false; }
+                    output.push(`<figure class="article-image ${image[3] === 'left' ? 'float-left mr-5' : 'float-right ml-5'} mb-4 max-w-[16rem] border border-[#3a3a4d] bg-[#1a1a24] p-2"><img alt="${escapeHtml(image[2] || image[1])}" data-world-image="${escapeHtml(image[1])}" class="w-full max-h-64 object-contain"><figcaption class="text-center text-gray-300 text-sm mt-2">${escapeHtml(image[2] || image[1])}</figcaption></figure>`);
+                    continue;
+                }
+                const listItem = line.match(/^\s*[-*]\s+(.+)$/);
+                if (listItem) {
+                    if (!inList) { output.push('<ul class="list-disc ml-6 my-3">'); inList = true; }
+                    output.push(`<li>${formatArticleLine(listItem[1], characterBySlug)}</li>`);
+                    continue;
+                }
+                if (inList) { output.push('</ul>'); inList = false; }
+                output.push(line ? formatArticleLine(line, characterBySlug) : '<div class="h-2"></div>');
+            }
+            if (inList) output.push('</ul>');
+            return output.join('');
+        }
+
+        function formatArticleLine(line, characterBySlug) {
+                let safe = escapeHtml(line);
+                safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>');
+                safe = safe.replace(/@([\p{L}\d_-]+)/gu, (mention, name) => {
+                    const character = characterBySlug.get(characterSlug(name.replace(/_/g, ' ')));
+                    return character
+                        ? `<button class="text-amber-300 underline" onclick="openCharacterArticle('${escapeHtml(character.id)}')">@${escapeHtml(name)}</button>`
+                        : `<span class="text-amber-300">@${escapeHtml(name)}</span>`;
+                });
+                const heading = safe.match(/^(#{1,3})\s+(.+)$/);
+                if (heading) return `<h${heading[1].length + 1}>${heading[2]}</h${heading[1].length + 1}>`;
+                return `<p>${safe}</p>`;
+        }
+
+        async function attachArticleImages(container, world) {
+            if (!container) return;
+            for (const image of container.querySelectorAll('img[data-world-image]')) {
+                const filename = image.dataset.worldImage;
+                try {
+                    const blob = await readWorldImage(world, filename);
+                    if (blob) image.src = URL.createObjectURL(blob);
+                } catch (error) {
+                    console.error(`Could not load image ${filename}:`, error);
+                    image.alt = `Image unavailable: ${filename}`;
+                }
+            }
+        }
+
+        async function readWorldImage(world, filename) {
+            const image = (world.images || []).find(item => item.filename === filename);
+            if (!image) return null;
+            if (image.storage === 'opfs' && navigator.storage?.getDirectory) {
+                const root = await navigator.storage.getDirectory();
+                const handle = await root.getFileHandle(image.path);
+                return handle.getFile();
+            }
+            const db = await openDatabase();
+            const record = await new Promise((resolve, reject) => {
+                const request = db.transaction('images').objectStore('images').get(image.id);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+            db.close();
+            return record?.blob || null;
+        }
+
+        async function storeWorldImage(world, file, preferredName = file.name) {
+            const baseName = preferredName.replace(/[\\/:*?"<>|\[\]]/g, '_');
+            let filename = baseName;
+            const dot = baseName.lastIndexOf('.');
+            const stem = dot > 0 ? baseName.slice(0, dot) : baseName;
+            const extension = dot > 0 ? baseName.slice(dot) : '';
+            let suffix = 2;
+            while ((world.images || []).some(image => image.filename === filename)) {
+                filename = `${stem}-${suffix++}${extension}`;
+            }
+            const id = `${world.id}:${filename}`;
+            const image = { id, filename, size: file.size, type: file.type };
+            if (file.size > 64 * 1024 * 1024 && navigator.storage?.getDirectory) {
+                const root = await navigator.storage.getDirectory();
+                const path = `${Date.now()}-${filename}`;
+                const handle = await root.getFileHandle(path, { create: true });
+                const writable = await handle.createWritable();
+                await file.stream().pipeTo(writable);
+                image.storage = 'opfs';
+                image.path = path;
+            } else {
+                const db = await openDatabase();
+                await new Promise((resolve, reject) => {
+                    const request = db.transaction('images', 'readwrite').objectStore('images').put({ id, blob: file });
+                    request.onsuccess = resolve;
+                    request.onerror = () => reject(request.error);
+                });
+                db.close();
+                image.storage = 'idb';
+            }
+            world.images ||= [];
+            world.images = world.images.filter(item => item.filename !== filename);
+            world.images.push(image);
+            await saveWorld(world);
+            return filename;
+        }
+
+        function getCurrentArticle(world) {
+            if (currentArticleKey === 'world') return world.article || world.lore || '';
+            const character = world.characters.find(item => item.id === currentArticleKey);
+            return character ? (character.article || character.bio || '') : '';
+        }
+
+        function setArticleTarget(key) {
+            currentArticleKey = key;
+            articleEditing = false;
+            renderWikiContent();
+        }
+
+        function openCharacterArticle(id) {
+            currentArticleKey = id;
+            currentWikiTab = 'articles';
+            articleEditing = false;
+            setWikiTab('articles');
+        }
+
+        function openCharacterArticleByName(slug) {
+            const world = worldsData.find(item => item.id === currentWorldId);
+            const character = world?.characters.find(item => characterSlug(item.name) === slug);
+            if (character) openCharacterArticle(character.id);
+        }
+
+        function editArticle() {
+            articleEditing = true;
+            renderWikiContent();
+            document.getElementById('article-editor')?.focus();
+        }
+
+        async function saveArticle() {
+            const world = worldsData.find(item => item.id === currentWorldId);
+            const article = document.getElementById('article-editor').value;
+            if (currentArticleKey === 'world') world.article = article;
+            else {
+                const character = world.characters.find(item => item.id === currentArticleKey);
+                if (character) character.article = article;
+            }
+            articleEditing = false;
+            try {
+                await saveWorld(world);
+            } catch (error) {
+                console.error('Could not save article:', error);
+                articleEditing = true;
+                showToast('* Thy article could not be saved to this device.');
+                return;
+            }
+            renderWikiContent();
+            showToast('* Thy article hath been inscribed.');
+        }
+
+        function addCharacterProperty(name = '', value = '') {
+            const row = document.createElement('div');
+            row.className = 'grid grid-cols-2 gap-2';
+            row.innerHTML = `<input aria-label="Property name" placeholder="e.g. mother" value="${escapeHtml(name)}" class="property-name bg-[#111118] border border-[#3a3a4d] rounded px-2 py-1 text-white"><input aria-label="Property value" placeholder="@character or value" value="${escapeHtml(value)}" class="property-value bg-[#111118] border border-[#3a3a4d] rounded px-2 py-1 text-white">`;
+            document.getElementById('char-properties').appendChild(row);
+        }
+
+        async function addArticleImage(file) {
+            if (!file) return;
+            const world = worldsData.find(item => item.id === currentWorldId);
+            try {
+                const filename = await storeWorldImage(world, file);
+                const editor = document.getElementById('article-editor');
+                const token = `\n[[image:${filename}|${filename}|right]]\n`;
+                editor.setRangeText(token, editor.selectionStart, editor.selectionEnd, 'end');
+            } catch (error) {
+                console.error('Could not store image:', error);
+                showToast('* The image could not be stored on this device.');
+            }
+        }
+
+        async function convertGoogleDoc(file) {
+            if (!file) return;
+            if (!window.mammoth) {
+                showToast('* The document converter could not be loaded.');
+                return;
+            }
+            try {
+                const result = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
+                const world = worldsData.find(item => item.id === currentWorldId);
+                const parsed = new DOMParser().parseFromString(result.value, 'text/html');
+                const lines = [];
+                const toMarkdown = async node => {
+                    if (node.nodeType === Node.TEXT_NODE) return node.nodeValue;
+                    if (node.nodeType !== Node.ELEMENT_NODE) return '';
+                    if (node.tagName === 'IMG' && node.src.startsWith('data:')) {
+                        const response = await fetch(node.src);
+                        const filename = await storeWorldImage(world, await response.blob(), `doc-image-${Date.now()}.png`);
+                        return `\n[[image:${filename}|${node.alt || filename}|right]]\n`;
+                    }
+                    const content = [];
+                    for (const child of node.childNodes) content.push(await toMarkdown(child));
+                    const text = content.join('');
+                    if (node.tagName === 'BR') return '\n';
+                    if (node.tagName === 'STRONG' || node.tagName === 'B') return `**${text}**`;
+                    if (node.tagName === 'EM' || node.tagName === 'I') return `*${text}*`;
+                    return text;
+                };
+                for (const node of parsed.body.children) {
+                    if (/^H[1-3]$/.test(node.tagName)) lines.push(`${'#'.repeat(Number(node.tagName[1]))} ${node.textContent.trim()}`);
+                    else if (node.tagName === 'P') lines.push((await toMarkdown(node)).trim());
+                    else if (node.tagName === 'UL' || node.tagName === 'OL')
+                        for (const item of node.querySelectorAll('li')) lines.push(`- ${(await toMarkdown(item)).trim()}`);
+                }
+                world.article = lines.join('\n\n');
+                await saveWorld(world);
+                document.getElementById('docs-input').value = '';
+                currentArticleKey = 'world';
+                currentWikiTab = 'articles';
+                articleEditing = false;
+                setWikiTab('articles');
+                showToast('* Thy document hath been converted into an article.');
+                if (result.messages.length) console.warn('Document conversion notes:', result.messages);
+            } catch (error) {
+                console.error('Could not convert document:', error);
+                showToast('* This document could not be converted.');
+            }
+        }
 
         /* -------------------------------------------------------------------
            4. INITIALIZATION & SELECTOR POPULATION
@@ -796,7 +1140,7 @@
             worldsData.forEach(w => {
                 const opt1 = document.createElement('option');
                 opt1.value = w.id;
-                opt1.textContent = `♥ ${w.name}`;
+                opt1.textContent = w.name;
                 landingSelect.appendChild(opt1);
 
                 const opt2 = document.createElement('option');
@@ -844,6 +1188,8 @@
         function switchWikiWorld(worldId) {
             playBlip(520);
             currentWorldId = worldId;
+            currentArticleKey = 'world';
+            articleEditing = false;
             renderWiki();
         }
 
@@ -884,6 +1230,79 @@
             renderWikiContent();
         }
 
+        function renderArticlesTab(world) {
+            const character = currentArticleKey === 'world'
+                ? null
+                : world.characters.find(item => item.id === currentArticleKey);
+            if (currentArticleKey !== 'world' && !character) currentArticleKey = 'world';
+            const article = getCurrentArticle(world);
+            const options = [`<option value="world" ${currentArticleKey === 'world' ? 'selected' : ''}>${escapeHtml(world.name)}</option>`]
+                .concat(world.characters.map(item => `<option value="${escapeHtml(item.id)}" ${currentArticleKey === item.id ? 'selected' : ''}>${escapeHtml(item.name)}</option>`))
+                .join('');
+            const title = character ? character.name : world.name;
+            const editor = articleEditing
+                ? `<div class="space-y-3">
+                       <textarea id="article-editor" rows="18" class="article-editor w-full bg-[#0e0e14] border border-[#3a3a4d] rounded p-4 text-gray-100 font-mono text-sm" placeholder="# An article&#10;&#10;Write in simple Markdown. Link characters with @Name. Add images with [[image:filename|caption|right]].">${escapeHtml(article)}</textarea>
+                       <div class="flex flex-wrap gap-3 items-center">
+                           <label class="cursor-pointer text-amber-300 underline">Add an image<input type="file" accept="image/*" class="hidden" onchange="addArticleImage(this.files[0]); this.value='';"></label>
+                           <span class="text-sm text-gray-400">Use # headings, **bold**, *italic*, @character and [[image:file|caption|right]].</span>
+                       </div>
+                       <div class="flex gap-2"><button onclick="saveArticle()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save article</button><button onclick="articleEditing=false; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div>
+                   </div>`
+                : `<div class="article-content leading-relaxed text-lg">${renderArticleMarkdown(article, world)}</div>
+                   <button onclick="editArticle()" class="mt-5 px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Edit</button>`;
+            return `<div class="border-b border-[#323244] pb-4 mb-6 flex flex-wrap items-end justify-between gap-4">
+                        <div><div class="text-xs font-pixel text-amber-400 mb-2">THE SCRIBES’ QUILL</div><h1 class="font-wiki-title text-3xl font-bold text-white">${escapeHtml(title)}</h1></div>
+                        <label class="font-wiki-title text-sm text-gray-300">Choose article <select onchange="setArticleTarget(this.value)" class="bg-[#0e0e14] border border-[#3a3a4d] px-3 py-2 rounded text-white">${options}</select></label>
+                    </div>${editor}`;
+        }
+
+        function renderCharacterGraph(world) {
+            const nodes = world.characters;
+            const edges = new Map();
+            const byAlias = new Map();
+            nodes.forEach(character => {
+                byAlias.set(characterSlug(character.name), character);
+                byAlias.set(characterSlug(character.name.split(/\s+/).slice(-1)[0]), character);
+            });
+            const addEdge = (from, to, label) => {
+                if (!from || !to || from.id === to.id) return;
+                const key = [from.id, to.id].sort().join(':');
+                if (!edges.has(key)) edges.set(key, { from, to, labels: [] });
+                if (label && !edges.get(key).labels.includes(label)) edges.get(key).labels.push(label);
+            };
+            nodes.forEach(source => {
+                const text = `${source.article || ''}\n${source.bio || ''}`;
+                for (const [, mention] of text.matchAll(/@([\p{L}\d_-]+)/gu)) {
+                    const target = byAlias.get(characterSlug(mention.replace(/_/g, ' '))) || resolveCharacterReference(world, mention);
+                    if (target) addEdge(source, target, 'mentioned');
+                }
+            });
+            nodes.forEach(character => {
+                Object.entries(character.properties || {}).forEach(([key, value]) => {
+                    const target = resolveCharacterReference(world, value);
+                    if (target) addEdge(character, target, key);
+                });
+            });
+            const width = 760, height = Math.max(300, nodes.length * 100);
+            const positions = nodes.map((node, index) => {
+                const angle = nodes.length ? (index / nodes.length) * Math.PI * 2 - Math.PI / 2 : 0;
+                return { node, x: width / 2 + Math.cos(angle) * Math.min(250, nodes.length * 28), y: height / 2 + Math.sin(angle) * Math.min(130, nodes.length * 18) };
+            });
+            const point = new Map(positions.map(item => [item.node.id, item]));
+            return `<div class="border-b border-[#323244] pb-4 mb-6"><div class="text-xs font-pixel text-amber-400 mb-2">THREADS OF FATE</div><h1 class="font-wiki-title text-3xl font-bold text-white">Character Links</h1></div>
+                <p class="font-wiki-body italic text-gray-300 mb-4">References with @names and character properties weave these links.</p>
+                <div class="overflow-x-auto border border-[#323244] rounded bg-[#171720]"><svg viewBox="0 0 ${width} ${height}" class="w-full min-w-[600px]">
+                    ${[...edges.values()].map(edge => {
+                        const a = point.get(edge.from.id), b = point.get(edge.to.id);
+                        return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#a16207" stroke-width="2"/><text x="${(a.x+b.x)/2}" y="${(a.y+b.y)/2-5}" fill="#fcd34d" text-anchor="middle" font-size="12">${escapeHtml(edge.labels.join(', '))}</text>`;
+                    }).join('')}
+                    ${positions.map(({ node, x, y }) => `<g><circle cx="${x}" cy="${y}" r="34" fill="#242434" stroke="#f59e0b" stroke-width="2"/><foreignObject x="${x-75}" y="${y+38}" width="150" height="48"><div xmlns="http://www.w3.org/1999/xhtml" class="text-center text-amber-200 text-sm">${escapeHtml(node.name)}</div></foreignObject></g>`).join('')}
+                </svg></div>
+                <div class="mt-4 flex flex-wrap gap-2">${nodes.map(node => `<button onclick="openCharacterArticle('${escapeHtml(node.id)}')" class="text-amber-300 underline">${escapeHtml(node.name)}</button>`).join('')}</div>
+                <p class="mt-3 text-gray-400 font-wiki-body">${edges.size} connection${edges.size === 1 ? '' : 's'} discovered.</p>`;
+        }
+
         function renderWikiContent() {
             const world = worldsData.find(w => w.id === currentWorldId);
             const container = document.getElementById('wiki-content-area');
@@ -895,7 +1314,7 @@
                     <div class="border-b border-[#323244] pb-4 mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                         <div>
                             <div class="text-xs font-pixel text-amber-400 mb-1">REALM OVERVIEW</div>
-                            <h1 class="font-wiki-title text-3xl sm:text-4xl font-bold text-white">${world.name}</h1>
+                            <h1 class="font-wiki-title text-3xl sm:text-4xl font-bold text-white">${escapeHtml(world.name)}</h1>
                         </div>
                         <span class="font-wiki-body italic text-gray-400 text-base">
                             "Recorded by the Scribes of Cladar"
@@ -907,14 +1326,14 @@
                         <!-- Left 2 Columns: Lore & Geography -->
                         <div class="lg:col-span-2 space-y-6 font-wiki-body text-lg sm:text-xl leading-relaxed text-gray-200">
                             <blockquote class="border-l-4 border-amber-500 pl-4 py-1 italic text-amber-200/90 bg-amber-500/5 rounded-r">
-                                “${world.motto}”
+                                “${escapeHtml(world.motto)}”
                             </blockquote>
 
                             <div>
                                 <h2 class="font-wiki-title text-2xl text-amber-400 border-b border-[#2e2e3e] pb-2 mb-3">
                                     I. Genesis &amp; Chronicle
                                 </h2>
-                                <p>${world.lore}</p>
+                                <p>${escapeHtml(world.lore)}</p>
                             </div>
 
                             <div>
@@ -924,8 +1343,8 @@
                                 <div class="space-y-4">
                                     ${world.geography.map(loc => `
                                         <div class="bg-[#1b1b26] border border-[#2e2e3e] p-4 rounded">
-                                            <h3 class="font-wiki-title text-lg font-bold text-amber-300">${loc.name}</h3>
-                                            <p class="text-gray-300 mt-1">${loc.desc}</p>
+                                            <h3 class="font-wiki-title text-lg font-bold text-amber-300">${escapeHtml(loc.name)}</h3>
+                                            <p class="text-gray-300 mt-1">${escapeHtml(loc.desc)}</p>
                                         </div>
                                     `).join('')}
                                 </div>
@@ -936,7 +1355,7 @@
                         <div class="lg:col-span-1">
                             <div class="bg-[#1a1a24] border-2 border-amber-500/40 rounded overflow-hidden shadow-xl">
                                 <div class="bg-amber-600/20 border-b border-amber-500/40 px-4 py-3 text-center">
-                                    <h3 class="font-wiki-title font-bold text-lg text-amber-300">${world.name}</h3>
+                                    <h3 class="font-wiki-title font-bold text-lg text-amber-300">${escapeHtml(world.name)}</h3>
                                 </div>
                                 <div class="p-4 flex justify-center bg-[#121218]">
                                     <!-- Pixel Art Crest SVG -->
@@ -952,15 +1371,15 @@
                                 <div class="divide-y divide-[#2e2e3e] font-wiki-body text-base">
                                     <div class="px-4 py-2.5 flex justify-between">
                                         <span class="font-bold text-amber-300/90">Current Epoch:</span>
-                                        <span class="text-gray-300 text-right">${world.era}</span>
+                                        <span class="text-gray-300 text-right">${escapeHtml(world.era)}</span>
                                     </div>
                                     <div class="px-4 py-2.5 flex justify-between">
                                         <span class="font-bold text-amber-300/90">High Seat:</span>
-                                        <span class="text-gray-300 text-right">${world.capital}</span>
+                                        <span class="text-gray-300 text-right">${escapeHtml(world.capital)}</span>
                                     </div>
                                     <div class="px-4 py-2.5 flex justify-between">
                                         <span class="font-bold text-amber-300/90">Sovereign:</span>
-                                        <span class="text-gray-300 text-right">${world.sovereign}</span>
+                                        <span class="text-gray-300 text-right">${escapeHtml(world.sovereign)}</span>
                                     </div>
                                     <div class="px-4 py-2.5 flex justify-between">
                                         <span class="font-bold text-amber-300/90">Inscribed Souls:</span>
@@ -976,7 +1395,7 @@
                     <div class="border-b border-[#323244] pb-4 mb-6 flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <div class="text-xs font-pixel text-amber-400 mb-1">DRAMATIS PERSONÆ</div>
-                            <h1 class="font-wiki-title text-3xl font-bold text-white">Characters of ${world.name}</h1>
+                            <h1 class="font-wiki-title text-3xl font-bold text-white">Characters of ${escapeHtml(world.name)}</h1>
                         </div>
                         <button onclick="openNewCharModal()" class="bg-amber-600 hover:bg-amber-500 text-black font-wiki-title font-bold text-xs px-4 py-2.5 rounded shadow transition-colors">
                             + Inscribe New Soul
@@ -992,21 +1411,21 @@
                             <div class="bg-[#1a1a24] border border-[#323246] hover:border-amber-500/60 rounded-lg p-5 transition-all flex flex-col justify-between shadow-md">
                                 <div>
                                     <div class="flex items-start justify-between gap-2 mb-2">
-                                        <h3 class="font-wiki-title text-xl font-bold text-amber-300">${char.name}</h3>
+                                        <h3 class="font-wiki-title text-xl font-bold text-amber-300">${escapeHtml(char.name)}</h3>
                                         <span class="text-xs font-pixel px-2 py-1 rounded ${char.status === 'Living' ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-500/40' : 'bg-red-900/50 text-red-300 border border-red-500/40'}">
-                                            ${char.status}
+                                            ${escapeHtml(char.status)}
                                         </span>
                                     </div>
                                     <div class="text-sm font-wiki-title text-gray-400 mb-3">
-                                        ${char.house} • <span class="text-amber-200/80">${char.role}</span>
+                                        ${escapeHtml(char.house)} • <span class="text-amber-200/80">${escapeHtml(char.role)}</span>
                                     </div>
                                     <p class="font-wiki-body text-lg text-gray-200 leading-relaxed">
-                                        ${char.bio}
+                                        ${escapeHtml(char.bio)}
                                     </p>
                                 </div>
                                 <div class="mt-4 pt-3 border-t border-[#2a2a3a] flex justify-between items-center text-xs font-wiki-title text-gray-500">
-                                    <span>Soul ID: #${char.id.toUpperCase()}</span>
-                                    <span class="text-amber-400/70">♥ Chronicle Verified</span>
+                                    <span>Character ID: #${escapeHtml(char.id.toUpperCase())}</span>
+                                    <button onclick="openCharacterArticle('${escapeHtml(char.id)}')" class="text-amber-400/70 underline">☼ Read article</button>
                                 </div>
                             </div>
                         `).join('')}
@@ -1016,18 +1435,18 @@
                 container.innerHTML = `
                     <div class="border-b border-[#323244] pb-4 mb-6">
                         <div class="text-xs font-pixel text-amber-400 mb-1">LINEAGES &amp; BLOODLINES</div>
-                        <h1 class="font-wiki-title text-3xl font-bold text-white">Albero genealogico</h1>
+                        <h1 class="font-wiki-title text-3xl font-bold text-white">Family Tree</h1>
                     </div>
 
                     <p class="font-wiki-body italic text-lg text-gray-300 mb-8">
-                        "Behold the noble boughs and ancient roots whence the rulers of ${world.name} do spring."
+                        "Behold the noble boughs and ancient roots whence the rulers of ${escapeHtml(world.name)} do spring."
                     </p>
 
                     <div class="space-y-8">
                         ${world.genealogy.map(tree => `
                             <div class="bg-[#191923] border border-[#323246] rounded-lg p-6">
                                 <h3 class="font-wiki-title text-xl font-bold text-amber-400 text-center mb-6 border-b border-[#2e2e3e] pb-3">
-                                    ${tree.house}
+                                    ${escapeHtml(tree.house)}
                                 </h3>
 
                                 <!-- Visual Family Tree Structure -->
@@ -1036,12 +1455,12 @@
                                     <div class="flex flex-wrap justify-center items-center gap-4">
                                         <div class="bg-[#232332] border-2 border-amber-500/60 px-4 py-3 rounded text-center min-w-[180px]">
                                             <div class="text-[10px] font-pixel text-amber-400 mb-1">PROGENITOR</div>
-                                            <div class="font-wiki-title font-bold text-white">${tree.ancestor}</div>
+                                            <div class="font-wiki-title font-bold text-white">${escapeHtml(tree.ancestor)}</div>
                                         </div>
                                         <span class="font-wiki-title text-amber-400 text-xl">⚭</span>
                                         <div class="bg-[#232332] border-2 border-amber-500/60 px-4 py-3 rounded text-center min-w-[180px]">
                                             <div class="text-[10px] font-pixel text-amber-400 mb-1">CONSORT</div>
-                                            <div class="font-wiki-title font-bold text-white">${tree.spouse}</div>
+                                            <div class="font-wiki-title font-bold text-white">${escapeHtml(tree.spouse)}</div>
                                         </div>
                                     </div>
 
@@ -1056,7 +1475,7 @@
                                         ${tree.descendants.map(child => `
                                             <div class="tree-node tree-branch bg-[#13131b] border border-amber-400/50 px-4 py-3 rounded text-center min-w-[170px]">
                                                 <div class="text-[10px] font-pixel text-gray-400 mb-1">HEIR / ISSUE</div>
-                                                <div class="font-wiki-title font-semibold text-amber-200">${child}</div>
+                                                <div class="font-wiki-title font-semibold text-amber-200">${escapeHtml(child)}</div>
                                             </div>
                                         `).join('')}
                                     </div>
@@ -1064,12 +1483,36 @@
                             </div>
                         `).join('')}
                     </div>
+                    <div class="mt-8 border-t border-[#323244] pt-5">
+                        <h2 class="font-wiki-title text-xl text-amber-400 mb-3">Kinship Properties</h2>
+                        <div class="flex flex-wrap gap-3">
+                            ${world.characters.flatMap(child => Object.entries(child.properties || {})
+                                .filter(([key, value]) => /mother|father|parent/i.test(key) && resolveCharacterReference(world, value))
+                                .map(([key, value]) => ({ child, parent: resolveCharacterReference(world, value), key }))).map(line => `
+                                <div class="bg-[#1a1a24] border border-[#323246] rounded p-3">
+                                    <div class="font-wiki-body text-gray-400">${escapeHtml(line.key)}</div>
+                                    <button onclick="openCharacterArticle('${line.parent.id}')" class="font-wiki-title text-amber-300 underline">${escapeHtml(line.parent.name)}</button>
+                                    <div class="text-amber-400 text-center">↓</div>
+                                    <button onclick="openCharacterArticle('${line.child.id}')" class="font-wiki-title text-amber-200 underline">${escapeHtml(line.child.name)}</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <h3 class="font-wiki-title text-lg text-amber-300 mt-6 mb-2">Other Properties</h3>
+                        <div class="flex flex-wrap gap-3">
+                            ${world.characters.filter(char => Object.entries(char.properties || {}).some(([key]) => !/mother|father|parent/i.test(key))).map(char => `
+                                <div class="bg-[#1a1a24] border border-[#323246] rounded p-3">
+                                    <button onclick="openCharacterArticle('${char.id}')" class="font-wiki-title text-amber-300 underline">${escapeHtml(char.name)}</button>
+                                    ${Object.entries(char.properties).filter(([key]) => !/mother|father|parent/i.test(key)).map(([key, value]) => `<div class="font-wiki-body text-gray-300">${escapeHtml(key)}: ${escapeHtml(value)}</div>`).join('')}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
                 `;
             } else if (currentWikiTab === 'relations') {
                 container.innerHTML = `
                     <div class="border-b border-[#323244] pb-4 mb-6">
                         <div class="text-xs font-pixel text-amber-400 mb-1">OATHS, BONDS &amp; FEUDS</div>
-                        <h1 class="font-wiki-title text-3xl font-bold text-white">Relazioni</h1>
+                        <h1 class="font-wiki-title text-3xl font-bold text-white">Bonds &amp; Feuds</h1>
                     </div>
 
                     <p class="font-wiki-body italic text-lg text-gray-300 mb-6">
@@ -1081,20 +1524,25 @@
                             <div class="bg-[#1a1a24] border border-[#323246] rounded-lg p-5">
                                 <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                                     <div class="flex flex-wrap items-center gap-3 font-wiki-title text-lg font-bold">
-                                        <span class="text-amber-300">${rel.from}</span>
+                                        <span class="text-amber-300">${escapeHtml(rel.from)}</span>
                                         <span class="text-xs font-pixel bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded border border-amber-500/40">
-                                            ◄ ${rel.type} ►
+                                            ◄ ${escapeHtml(rel.type)} ►
                                         </span>
-                                        <span class="text-amber-300">${rel.to}</span>
+                                        <span class="text-amber-300">${escapeHtml(rel.to)}</span>
                                     </div>
                                 </div>
                                 <p class="font-wiki-body text-lg text-gray-300 leading-relaxed">
-                                    ${rel.desc}
+                                    ${escapeHtml(rel.desc)}
                                 </p>
                             </div>
                         `).join('')}
                     </div>
                 `;
+            } else if (currentWikiTab === 'articles') {
+                container.innerHTML = renderArticlesTab(world);
+                attachArticleImages(container, world);
+            } else if (currentWikiTab === 'graph') {
+                container.innerHTML = renderCharacterGraph(world);
             }
         }
 
@@ -1158,11 +1606,14 @@
                         type: 'Sacred Stewardship',
                         desc: 'Sworn to safeguard the nascent flame of this newly forged world.'
                     }
-                ]
+                ],
+                images: [],
+                article: ''
             };
 
             worldsData.push(newRealm);
             currentWorldId = newId;
+            persistWorlds();
             populateWorldSelectors();
 
             // Clear inputs
@@ -1177,6 +1628,9 @@
 
         function openNewCharModal() {
             playBlip(580);
+            document.getElementById('char-properties').innerHTML = '';
+            addCharacterProperty('mother');
+            addCharacterProperty('father');
             document.getElementById('new-char-modal').classList.remove('hidden');
         }
 
@@ -1190,6 +1644,12 @@
             const house = document.getElementById('char-house').value.trim() || 'Unaligned';
             const role = document.getElementById('char-role').value.trim() || 'Wanderer';
             const bio = document.getElementById('char-bio').value.trim() || 'A mysterious soul whose deeds are yet to be sung.';
+            const properties = {};
+            document.querySelectorAll('#char-properties .grid').forEach(row => {
+                const key = row.querySelector('.property-name').value.trim();
+                const value = row.querySelector('.property-value').value.trim();
+                if (key && value) properties[key] = value;
+            });
 
             if (!name) {
                 showToast("* Every soul must bear a name!");
@@ -1204,9 +1664,11 @@
                     house,
                     role,
                     status: 'Living',
-                    bio
+                    bio,
+                    properties
                 });
             }
+            persistWorlds();
 
             document.getElementById('char-name').value = '';
             document.getElementById('char-house').value = '';
@@ -1218,9 +1680,181 @@
             showToast(`* ${name} inscribed into the annals!`);
         }
 
-        // Boot up selectors on load
-        window.addEventListener('DOMContentLoaded', () => {
-            populateWorldSelectors();
+        async function exportWorld() {
+            const world = worldsData.find(item => item.id === currentWorldId);
+            if (!window.zip) {
+                showToast('* The archive-maker could not be loaded.');
+                return;
+            }
+            let writer;
+            let zipWriter;
+            try {
+                const totalBytes = (world.images || []).reduce((sum, image) => sum + image.size, 0);
+                if (totalBytes > 1024 ** 3 && !window.showSaveFilePicker) {
+                    throw new Error('Large archives require a browser with streaming file-save support.');
+                }
+                if (window.showSaveFilePicker) {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: `${world.name.replace(/[^a-z0-9-_ ]/gi, '').trim() || 'clacter-world'}.zip`,
+                        types: [{ description: 'ZIP archive', accept: { 'application/zip': ['.zip'] } }]
+                    });
+                    writer = new zip.WritableWriter(await handle.createWritable());
+                } else {
+                    writer = new zip.BlobWriter('application/zip');
+                }
+                zipWriter = new zip.ZipWriter(writer, { zip64: true });
+                const portableWorld = JSON.parse(JSON.stringify(world));
+                portableWorld.images = (world.images || []).map(({ filename, size, type }) => ({ filename, size, type }));
+                const manifest = JSON.stringify({ format: 'clacter-world', version: 1, world: portableWorld }, null, 2);
+                await zipWriter.add('world.json', new zip.TextReader(manifest));
+                for (const image of world.images || []) {
+                    const blob = await readWorldImage(world, image.filename);
+                    if (!blob) throw new Error(`Missing image data: ${image.filename}`);
+                    await zipWriter.add(`images/${image.filename}`, new zip.BlobReader(blob), { level: 0 });
+                }
+                const result = await zipWriter.close();
+                if (result instanceof Blob) {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(result);
+                    link.download = `${world.name.replace(/[^a-z0-9-_ ]/gi, '').trim() || 'clacter-world'}.zip`;
+                    link.click();
+                    setTimeout(() => URL.revokeObjectURL(link.href), 60000);
+                }
+                showToast('* The realm hath been packed into a ZIP archive.');
+            } catch (error) {
+                console.error('World export failed:', error);
+                showToast(`* Export failed: ${error.message}`);
+            }
+        }
+
+        async function importWorldZip(file) {
+            if (!file) return;
+            if (!window.zip) {
+                showToast('* The archive-reader could not be loaded.');
+                return;
+            }
+            let reader;
+            try {
+                reader = new zip.ZipReader(new zip.BlobReader(file));
+                const entries = await reader.getEntries();
+                const jsonEntry = entries.find(entry => entry.filename.toLowerCase() === 'world.json')
+                    || entries.find(entry => entry.filename.toLowerCase().endsWith('.json'));
+                if (!jsonEntry) throw new Error('No world JSON was found in the archive.');
+                const data = JSON.parse(await jsonEntry.getData(new zip.TextWriter()));
+                const world = data.world || data;
+                if (!world || typeof world.name !== 'string' || !world.name.trim() || !Array.isArray(world.characters)) {
+                    throw new Error('The JSON does not contain a valid world.');
+                }
+                world.id = `${characterSlug(world.name)}-${Date.now()}`;
+                world.geography = Array.isArray(world.geography) ? world.geography : [];
+                world.genealogy = Array.isArray(world.genealogy) ? world.genealogy.map(tree => ({
+                    ...tree,
+                    descendants: Array.isArray(tree?.descendants) ? tree.descendants : []
+                })) : [];
+                world.relations = Array.isArray(world.relations) ? world.relations : [];
+                world.motto = typeof world.motto === 'string' ? world.motto : '';
+                world.lore = typeof world.lore === 'string' ? world.lore : '';
+                world.era = typeof world.era === 'string' ? world.era : '';
+                world.capital = typeof world.capital === 'string' ? world.capital : '';
+                world.sovereign = typeof world.sovereign === 'string' ? world.sovereign : '';
+                world.article = typeof world.article === 'string' ? world.article : '';
+                world.characters.forEach((character, index) => {
+                    if (!character || typeof character !== 'object') throw new Error(`Character ${index + 1} is malformed.`);
+                    character.id = `imported-${Date.now()}-${index}`;
+                    character.name = typeof character.name === 'string' && character.name.trim()
+                        ? character.name
+                        : `Unnamed Character ${index + 1}`;
+                    character.properties = character.properties && typeof character.properties === 'object' && !Array.isArray(character.properties)
+                        ? character.properties
+                        : {};
+                });
+                world.images = [];
+                for (const entry of entries) {
+                    if (!entry.filename.startsWith('images/')) continue;
+                    const filename = entry.filename.slice('images/'.length).split('/').pop();
+                    if (!filename || filename === '.' || filename === '..') continue;
+                    const image = { filename, size: entry.uncompressedSize || 0, type: '' };
+                    const id = `${world.id}:${filename}`;
+                    image.id = id;
+                    if (image.size > 64 * 1024 * 1024 && !navigator.storage?.getDirectory) {
+                        throw new Error(`This browser cannot stream the large image ${filename}; use a browser with OPFS storage.`);
+                    } else if (image.size > 64 * 1024 * 1024) {
+                        const root = await navigator.storage.getDirectory();
+                        const path = `${Date.now()}-${filename}`;
+                        const handle = await root.getFileHandle(path, { create: true });
+                        const writable = await handle.createWritable();
+                        await entry.getData(new zip.WritableWriter(writable));
+                        image.storage = 'opfs';
+                        image.path = path;
+                    } else {
+                        const blob = await entry.getData(new zip.BlobWriter());
+                        image.size = blob.size;
+                        image.type = blob.type;
+                        const db = await openDatabase();
+                        await new Promise((resolve, reject) => {
+                            const request = db.transaction('images', 'readwrite').objectStore('images').put({ id, blob });
+                            request.onsuccess = resolve;
+                            request.onerror = () => reject(request.error);
+                        });
+                        db.close();
+                        image.storage = 'idb';
+                    }
+                    world.images.push(image);
+                }
+                await reader.close();
+                worldsData.push(world);
+                currentWorldId = world.id;
+                currentWikiTab = 'world';
+                articleEditing = false;
+                await saveWorld(world);
+                populateWorldSelectors();
+                document.getElementById('wiki-world-switcher').value = world.id;
+                renderWiki();
+                document.getElementById('world-zip-input').value = '';
+                showToast('* Thy realm hath been imported and set in order.');
+            } catch (error) {
+                if (reader) await reader.close().catch(closeError => console.error('Could not close archive:', closeError));
+                console.error('World import failed:', error);
+                showToast(`* Import failed: ${error.message}`);
+            }
+        }
+
+        async function installApp() {
+            if (installPrompt) {
+                installPrompt.prompt();
+                await installPrompt.userChoice;
+                installPrompt = null;
+                document.getElementById('install-app').classList.add('hidden');
+            } else {
+                showToast(/iphone|ipad|ipod/i.test(navigator.userAgent)
+                    ? '* On iOS, tap Share, then “Add to Home Screen”.'
+                    : '* Open thy browser menu and choose “Install app” or “Add to Home screen”.');
+            }
+        }
+
+        window.addEventListener('beforeinstallprompt', event => {
+            event.preventDefault();
+            installPrompt = event;
+            document.getElementById('install-app').classList.remove('hidden');
+        });
+        window.addEventListener('appinstalled', () => document.getElementById('install-app').classList.add('hidden'));
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('install-app').classList.remove('hidden');
+            if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+                navigator.serviceWorker.register('./sw.js').catch(error => console.error('PWA worker registration failed:', error));
+            }
+            try {
+                await loadSavedWorlds();
+                currentWorldId = worldsData[0]?.id || currentWorldId;
+                populateWorldSelectors();
+                if (navigator.storage?.persist) await navigator.storage.persist();
+                if (worldsData.length) await persistWorlds();
+            } catch (error) {
+                console.error('Could not load local chronicles:', error);
+                showToast('* Local storage could not be opened; this session may not persist.');
+                populateWorldSelectors();
+            }
         });
     </script>
 </body>
