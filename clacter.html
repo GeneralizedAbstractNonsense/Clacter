@@ -102,6 +102,11 @@
         .article-content h2, .article-content h3 { font-family: 'Cinzel', serif; color: #fbbf24; margin: 1.25rem 0 .5rem; }
         .article-content p { margin: .75rem 0; }
         .article-content img { max-width: 100%; }
+        .wiki-nav-btn.active {
+            background: #282832;
+            color: #fde68a;
+            border-left-color: #f59e0b;
+        }
 
         /* Floating & Glowing Animations for Lanterns and Pumpkins */
         @keyframes floatLantern {
@@ -339,7 +344,6 @@
             </div>
         </div>
 
-       
     </main>
 
     <!-- =====================================================================
@@ -348,124 +352,51 @@
     <section id="wiki-view" class="hidden min-h-screen w-full bg-[#111116] text-gray-100 relative z-20 flex flex-col">
 
         <!-- Top Community Header Banner -->
-        <header class="bg-[#181822] border-b-2 border-[#323244] px-4 sm:px-8 py-3 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30 shadow-lg">
-            <div class="flex items-center gap-4">
-                <!-- Return to Landing (CLACTER) -->
-                <button onclick="returnToLanding()" onmouseenter="playBlip(380)" class="bg-black border-2 border-white hover:border-yellow-300 text-white hover:text-yellow-300 font-pixel text-[10px] sm:text-xs px-3 py-2 transition-colors flex items-center gap-2">
-                    <span>◄</span> CLACTER
-                </button>
-
-                <!-- Realm Emblem & Wiki Title -->
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded bg-amber-500/20 border border-amber-400 flex items-center justify-center text-amber-300 font-pixel text-sm">
-                        ✦
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h2 id="wiki-world-title" class="font-wiki-title text-xl sm:text-2xl font-bold text-amber-400 tracking-wide">
-                                THE ASHEN CROWN
-                            </h2>
-                            <span class="hidden sm:inline-block text-xs font-pixel bg-amber-500/20 text-amber-300 px-2 py-0.5 border border-amber-500/40">
-                                WIKI ARCHIVE
-                            </span>
-                        </div>
-                        <p id="wiki-world-subtitle" class="font-wiki-body italic text-sm text-gray-400">
-                            "Where cinders whisper the forgotten oaths of kings."
-                        </p>
-                    </div>
+        <header class="bg-[#181822] border-b border-[#323244] px-3 sm:px-5 py-2 flex items-center gap-3 sticky top-0 z-30">
+            <button onclick="returnToLanding()" class="text-amber-300 hover:text-white font-pixel text-[10px] px-2 py-2 shrink-0">CLACTER</button>
+            <div class="min-w-0 flex-1">
+                <h2 id="wiki-world-title" class="font-wiki-title text-base sm:text-lg font-bold text-amber-300 truncate">THE ASHEN CROWN</h2>
+                <p id="wiki-world-subtitle" class="hidden"></p>
+            </div>
+            <select id="wiki-world-switcher" aria-label="Choose realm" onchange="switchWikiWorld(this.value)" class="max-w-[28vw] sm:max-w-52 bg-[#0e0e14] border border-[#3a3a4d] text-gray-200 font-wiki-body text-sm px-2 py-1.5 rounded focus:outline-none focus:border-amber-400"></select>
+            <details class="relative shrink-0">
+                <summary aria-label="Tools" class="list-none cursor-pointer border border-[#3a3a4d] hover:border-amber-400 text-gray-200 px-2 sm:px-3 py-1.5 rounded font-wiki-body text-sm"><span class="hidden sm:inline">Tools</span><span class="sm:hidden" aria-hidden="true">•••</span><span aria-hidden="true">⌄</span></summary>
+                <div class="absolute right-0 top-full mt-1 min-w-44 bg-[#181822] border border-[#3a3a4d] rounded shadow-lg p-1 flex flex-col z-50">
+                    <button onclick="exportWorld(); this.closest('details').open=false" class="text-left px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Export realm (.zip)</button>
+                    <label class="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Import realm (.zip)<input id="world-zip-input" type="file" accept=".zip,application/zip" class="hidden" onchange="importWorldZip(this.files[0]); this.closest('details').open=false"></label>
+                    <label class="cursor-pointer px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Import Google Docs (.docx)<input id="docs-input" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden" onchange="convertGoogleDoc(this.files[0]); this.closest('details').open=false"></label>
+                    <button id="install-app" onclick="installApp(); this.closest('details').open=false" class="hidden text-left px-3 py-2 text-sm text-gray-200 hover:bg-[#282832]">Install app</button>
                 </div>
-            </div>
-
-            <!-- Quick Realm Switcher in Wiki Header -->
-            <div class="flex items-center gap-3">
-                <span class="hidden md:inline font-wiki-body italic text-gray-400 text-sm">Traverse to another realm:</span>
-                <select id="wiki-world-switcher" onchange="switchWikiWorld(this.value)" class="bg-[#0e0e14] border border-[#3a3a4d] text-amber-200 font-wiki-body text-base px-3 py-1.5 rounded focus:outline-none focus:border-amber-400">
-                </select>
-            </div>
-            <div class="flex flex-wrap gap-2">
-                <button onclick="exportWorld()" class="border border-amber-500/60 text-amber-200 px-3 py-1.5 rounded font-wiki-title text-xs">Export ZIP</button>
-                <label class="border border-amber-500/60 text-amber-200 px-3 py-1.5 rounded font-wiki-title text-xs cursor-pointer">Import ZIP<input id="world-zip-input" type="file" accept=".zip,application/zip" class="hidden" onchange="importWorldZip(this.files[0])"></label>
-                <label class="border border-amber-500/60 text-amber-200 px-3 py-1.5 rounded font-wiki-title text-xs cursor-pointer">Google Docs<input id="docs-input" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden" onchange="convertGoogleDoc(this.files[0])"></label>
-                <button id="install-app" onclick="installApp()" class="hidden border border-amber-500/60 text-amber-200 px-3 py-1.5 rounded font-wiki-title text-xs">Install app</button>
-            </div>
+            </details>
         </header>
 
-        <!-- Main Wiki Container: Fandom Left Sidebar + Article Content -->
+        <!-- Main Wiki Container: Left Sidebar + Article Content -->
         <div class="flex-1 flex flex-col md:flex-row max-w-[1440px] w-full mx-auto">
 
             <!-- LEFT SIDEBAR -->
-            <aside class="w-full md:w-64 lg:w-72 bg-[#16161f] border-b md:border-b-0 md:border-r border-[#2e2e3e] p-4 sm:p-5 shrink-0">
-                <div class="mb-4 pb-2 border-b border-[#2e2e3e]">
-                    <span class="font-pixel text-[10px] text-amber-400 tracking-wider uppercase">
-                        SACRED COMPENDIUM
-                    </span>
-                </div>
-
-                <!-- Navigation Tabs -->
-                <nav class="flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0">
-                    <button onclick="setWikiTab('world')" id="tab-world" class="wiki-nav-btn flex items-center gap-3 px-4 py-3 rounded text-left font-wiki-title font-semibold text-sm sm:text-base transition-all bg-amber-500/20 text-amber-300 border border-amber-500/50 whitespace-nowrap">
-                        <span class="text-lg">🏰</span>
-                        <div>
-                            <div>World</div>
-                            <div class="text-[11px] font-wiki-body font-normal text-gray-400 hidden md:block">Lore, Realms &amp; History</div>
-                        </div>
-                    </button>
-
-                    <button onclick="setWikiTab('characters')" id="tab-characters" class="wiki-nav-btn flex items-center gap-3 px-4 py-3 rounded text-left font-wiki-title font-semibold text-sm sm:text-base transition-all text-gray-300 hover:bg-[#222230] border border-transparent whitespace-nowrap">
-                        <span class="text-lg">🎭</span>
-                        <div>
-                            <div>Characters</div>
-                            <div class="text-[11px] font-wiki-body font-normal text-gray-400 hidden md:block">Dramatis Personæ</div>
-                        </div>
-                    </button>
-
-                    <button onclick="setWikiTab('genealogy')" id="tab-genealogy" class="wiki-nav-btn flex items-center gap-3 px-4 py-3 rounded text-left font-wiki-title font-semibold text-sm sm:text-base transition-all text-gray-300 hover:bg-[#222230] border border-transparent whitespace-nowrap">
-                        <span class="text-lg">🌳</span>
-                        <div>
-                            <div>Family Tree</div>
-                            <div class="text-[11px] font-wiki-body font-normal text-gray-400 hidden md:block">Bloodlines &amp; Houses</div>
-                        </div>
-                    </button>
-
-                    <button onclick="setWikiTab('relations')" id="tab-relations" class="wiki-nav-btn flex items-center gap-3 px-4 py-3 rounded text-left font-wiki-title font-semibold text-sm sm:text-base transition-all text-gray-300 hover:bg-[#222230] border border-transparent whitespace-nowrap">
-                        <span class="text-lg">⚔️</span>
-                        <div>
-                            <div>Bonds &amp; Feuds</div>
-                            <div class="text-[11px] font-wiki-body font-normal text-gray-400 hidden md:block">Oaths, Bonds &amp; Feuds</div>
-                        </div>
-                    </button>
-                    <button onclick="setWikiTab('articles')" id="tab-articles" class="wiki-nav-btn flex items-center gap-3 px-4 py-3 rounded text-left font-wiki-title font-semibold text-sm sm:text-base transition-all text-gray-300 hover:bg-[#222230] border border-transparent whitespace-nowrap">
-                        <span class="text-lg">📜</span><div><div>Articles</div><div class="text-[11px] font-wiki-body font-normal text-gray-400 hidden md:block">The Scribes’ Quill</div></div>
-                    </button>
-                    <button onclick="setWikiTab('graph')" id="tab-graph" class="wiki-nav-btn flex items-center gap-3 px-4 py-3 rounded text-left font-wiki-title font-semibold text-sm sm:text-base transition-all text-gray-300 hover:bg-[#222230] border border-transparent whitespace-nowrap">
-                        <span class="text-lg">🕸️</span><div><div>Character Links</div><div class="text-[11px] font-wiki-body font-normal text-gray-400 hidden md:block">Threads of Fate</div></div>
-                    </button>
+            <aside class="w-full md:w-48 bg-[#16161f] border-b md:border-b-0 md:border-r border-[#2e2e3e] p-3 shrink-0">
+                <div class="text-xs text-gray-400 uppercase tracking-wide mb-2 px-3">Contents</div>
+                <nav class="flex md:flex-col gap-1 overflow-x-auto pb-1 md:pb-0">
+                    <button onclick="setWikiTab('world')" id="tab-world" class="wiki-nav-btn active border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300">World</button>
+                    <button onclick="setWikiTab('characters')" id="tab-characters" class="wiki-nav-btn border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300 hover:bg-[#222230]">Characters</button>
+                    <button onclick="setWikiTab('genealogy')" id="tab-genealogy" class="wiki-nav-btn border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300 hover:bg-[#222230]">Family tree</button>
+                    <button onclick="setWikiTab('relations')" id="tab-relations" class="wiki-nav-btn border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300 hover:bg-[#222230]">Relations</button>
+                    <button onclick="setWikiTab('articles')" id="tab-articles" class="wiki-nav-btn border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300 hover:bg-[#222230]">Articles</button>
+                    <button onclick="setWikiTab('graph')" id="tab-graph" class="wiki-nav-btn border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300 hover:bg-[#222230]">Character links</button>
                 </nav>
 
-                <!-- Fandom-Style Wiki Stats Box -->
-                <div class="hidden md:block mt-8 p-4 bg-[#1d1d28] border border-[#2e2e3e] rounded">
-                    <h4 class="font-wiki-title text-xs uppercase tracking-wider text-amber-400 mb-3 border-b border-[#2e2e3e] pb-1">
-                        Chronicle Statistics
-                    </h4>
-                    <ul class="space-y-2 font-wiki-body text-base text-gray-300">
-                        <li class="flex justify-between">
-                            <span>Characters:</span>
-                            <span id="stat-chars" class="font-bold text-amber-300">0</span>
-                        </li>
-                        <li class="flex justify-between">
-                            <span>Bloodlines:</span>
-                            <span id="stat-houses" class="font-bold text-amber-300">0</span>
-                        </li>
-                        <li class="flex justify-between">
-                            <span>Sworn Bonds:</span>
-                            <span id="stat-relations" class="font-bold text-amber-300">0</span>
-                        </li>
+                <details class="hidden md:block mt-6 px-3 text-sm text-gray-400">
+                    <summary class="cursor-pointer">Statistics</summary>
+                    <ul class="mt-2 space-y-1">
+                        <li>Characters: <span id="stat-chars">0</span></li>
+                        <li>Bloodlines: <span id="stat-houses">0</span></li>
+                        <li>Bonds: <span id="stat-relations">0</span></li>
                     </ul>
-                </div>
+                </details>
             </aside>
 
             <!-- MAIN WIKI ARTICLE STAGE -->
-            <div class="flex-1 p-5 sm:p-8 lg:p-10 bg-[#13131a]">
+            <div class="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 bg-[#13131a]">
                 <!-- Dynamic Content Injected Here -->
                 <div id="wiki-content-area" class="max-w-5xl mx-auto"></div>
             </div>
@@ -1366,17 +1297,10 @@
             playBlip(480);
             currentWikiTab = tabName;
 
-            // Update active button styles
-            document.querySelectorAll('.wiki-nav-btn').forEach(btn => {
-                btn.classList.remove('bg-amber-500/20', 'text-amber-300', 'border-amber-500/50');
-                btn.classList.add('text-gray-300', 'border-transparent');
-            });
+            document.querySelectorAll('.wiki-nav-btn').forEach(btn => btn.classList.remove('active'));
 
             const activeBtn = document.getElementById(`tab-${tabName}`);
-            if (activeBtn) {
-                activeBtn.classList.remove('text-gray-300', 'border-transparent');
-                activeBtn.classList.add('bg-amber-500/20', 'text-amber-300', 'border-amber-500/50');
-            }
+            if (activeBtn) activeBtn.classList.add('active');
 
             renderWikiContent();
         }
@@ -2060,6 +1984,10 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('install-app').classList.remove('hidden');
+            document.addEventListener('click', event => {
+                const tools = document.querySelector('header details');
+                if (tools && !tools.contains(event.target)) tools.open = false;
+            });
             if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
                 navigator.serviceWorker.register('./sw.js').catch(error => console.error('PWA worker registration failed:', error));
             }
