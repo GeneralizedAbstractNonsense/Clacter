@@ -382,7 +382,7 @@
                     <button onclick="setWikiTab('characters')" id="tab-characters" class="wiki-nav-btn border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300 hover:bg-[#222230]">Characters</button>
                     <button onclick="setWikiTab('genealogy')" id="tab-genealogy" class="wiki-nav-btn border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300 hover:bg-[#222230]">Family tree</button>
                     <button onclick="setWikiTab('relations')" id="tab-relations" class="wiki-nav-btn border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300 hover:bg-[#222230]">Relations</button>
-                    <button onclick="setWikiTab('articles')" id="tab-articles" class="wiki-nav-btn border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300 hover:bg-[#222230]">Articles</button>
+                    <button onclick="setWikiTab('articles')" id="tab-articles" class="wiki-nav-btn border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300 hover:bg-[#222230]">Character article</button>
                     <button onclick="setWikiTab('graph')" id="tab-graph" class="wiki-nav-btn border-l-2 border-transparent px-3 py-2 text-left text-sm rounded-r whitespace-nowrap text-gray-300 hover:bg-[#222230]">Character links</button>
                 </nav>
 
@@ -390,7 +390,7 @@
                     <summary class="cursor-pointer">Statistics</summary>
                     <ul class="mt-2 space-y-1">
                         <li>Characters: <span id="stat-chars">0</span></li>
-                        <li>Bloodlines: <span id="stat-houses">0</span></li>
+                        <li>Family links: <span id="stat-houses">0</span></li>
                         <li>Bonds: <span id="stat-relations">0</span></li>
                     </ul>
                 </details>
@@ -482,7 +482,9 @@
                 </div>
                 <div>
                     <label class="block text-sm font-wiki-title text-amber-300">Kinship &amp; Custom Properties</label>
+                    <datalist id="new-char-reference-options"></datalist>
                     <div id="char-properties" class="space-y-2 mt-1"></div>
+                    <p class="mt-2 text-xs text-gray-400">Choose a character for mother or father to add this person to the family tree.</p>
                     <button type="button" onclick="addCharacterProperty()" class="mt-2 text-amber-300 underline text-sm">+ Add a property</button>
                 </div>
             </div>
@@ -861,38 +863,7 @@
                         }
                     }
                 ],
-                genealogy: [
-                    {
-                        house: 'House of Bourbon — Louis XV’s parents',
-                        ancestor: 'Louis, Duke of Burgundy',
-                        spouse: 'Marie Adélaïde of Savoy',
-                        descendants: ['Louis XV']
-                    },
-                    {
-                        house: 'House of Bourbon — Louis XV and Marie Leszczyńska',
-                        ancestor: 'Louis XV',
-                        spouse: 'Marie Leszczyńska',
-                        descendants: ['Louis, Dauphin of France', 'Louise Élisabeth of France', 'Anne Henriette of France']
-                    },
-                    {
-                        house: 'House of Bourbon — the Dauphin’s family',
-                        ancestor: 'Louis, Dauphin of France',
-                        spouse: 'Maria Josepha of Saxony',
-                        descendants: ['Louis XVI', 'Louis XVIII', 'Charles X']
-                    },
-                    {
-                        house: 'House of Bourbon — Louis XVI and Marie Antoinette',
-                        ancestor: 'Louis XVI',
-                        spouse: 'Marie Antoinette',
-                        descendants: ['Marie-Thérèse Charlotte', 'Louis Joseph', 'Louis Charles', 'Sophie Hélène Béatrice']
-                    },
-                    {
-                        house: 'House of Habsburg-Lorraine — the imperial family',
-                        ancestor: 'Francis I, Holy Roman Emperor',
-                        spouse: 'Maria Theresa',
-                        descendants: ['Marie Antoinette', 'Joseph II', 'Leopold II', 'Maria Carolina']
-                    }
-                ],
+                genealogy: [],
                 relations: [
                     {
                         from: 'Louis XV',
@@ -950,7 +921,7 @@
                     }
                 ],
                 pages: {
-                    characters: `## The royal family\nThe entries below link to full character pages. Select **Edit** on a character card to change its article, infobox, and custom properties together.\n\n## A note on chronology\nLouis XV died in 1774. He is included as Louis XVI’s grandfather and as the preceding Bourbon king, not as a participant in the Revolution.`,
+                    characters: `## The royal family\nChoose a name below to open its character page, then select **Edit** to amend the article, infobox, and custom properties together.\n\n## A note on chronology\nLouis XV died in 1774. He is included as Louis XVI’s grandfather and as the preceding Bourbon king, not as a participant in the Revolution.`,
                     genealogy: `## How to read these lineages\nEach entry shows a parent pair and their descendants. The Bourbon line joins Louis XV to Louis XVI through Louis, Dauphin of France. The Habsburg-Lorraine line shows Marie Antoinette’s parents, Francis I and Maria Theresa.`,
                     relations: `## Court, kinship, and revolution\nThe links below distinguish family ties from the political chronology. Marie Antoinette was a daughter of Maria Theresa and Francis I, and the wife of Louis XVI.`
                 },
@@ -965,7 +936,6 @@
         let articleEditing = false;
         let overviewEditing = false;
         let pageEditingKey = null;
-        let lineagesEditing = false;
         let relationsEditing = false;
         let installPrompt = null;
         const DB_NAME = 'clacter-worlds';
@@ -1023,7 +993,10 @@
             worldsData.forEach(world => {
                 world.characters ||= [];
                 world.geography ||= [];
-                world.genealogy ||= [];
+                world.genealogy = Array.isArray(world.genealogy) ? world.genealogy.map(tree => ({
+                    ...tree,
+                    descendants: Array.isArray(tree?.descendants) ? tree.descendants : []
+                })) : [];
                 world.relations ||= [];
                 world.images ||= [];
                 world.article ||= '';
@@ -1050,6 +1023,97 @@
             );
         }
 
+        function getCharacterParents(world, character) {
+            return Object.entries(character.properties || {})
+                .filter(([key]) => ['mother', 'father', 'parent', 'parent1', 'parent2'].includes(key.trim().toLowerCase().replace(/[\s_-]/g, '')))
+                .map(([relation, value]) => ({ relation, character: resolveCharacterReference(world, value) }))
+                .filter((entry, index, entries) =>
+                    entry.character &&
+                    entry.character.id !== character.id &&
+                    entries.findIndex(item => item.character?.id === entry.character.id) === index
+                )
+                .sort((a, b) => {
+                    const order = { mother: 0, father: 1 };
+                    const aKey = a.relation.trim().toLowerCase().replace(/[\s_-]/g, '');
+                    const bKey = b.relation.trim().toLowerCase().replace(/[\s_-]/g, '');
+                    return (order[aKey] ?? 2) - (order[bKey] ?? 2);
+                });
+        }
+
+        function renderCharacterReferenceOptions(world, listId) {
+            return `<datalist id="${listId}">${world.characters.map(character =>
+                `<option value="@${characterSlug(character.name)}" label="${escapeHtml(character.name)}"></option>`
+            ).join('')}</datalist>`;
+        }
+
+        function renderGeneratedFamilyTree(world) {
+            const families = new Map();
+            const connected = new Set();
+            world.characters.forEach(child => {
+                const parents = getCharacterParents(world, child);
+                if (!parents.length) return;
+                const key = parents.map(entry => entry.character.id).sort().join(':');
+                if (!families.has(key)) families.set(key, { parents, children: [] });
+                families.get(key).children.push(child);
+                connected.add(child.id);
+                parents.forEach(entry => connected.add(entry.character.id));
+            });
+
+            const generationFor = (character, visiting = new Set()) => {
+                if (visiting.has(character.id)) return 0;
+                const parents = getCharacterParents(world, character).map(entry => entry.character);
+                if (!parents.length) return 0;
+                const nextVisiting = new Set(visiting).add(character.id);
+                return 1 + Math.max(...parents.map(parent => generationFor(parent, nextVisiting)));
+            };
+            const orderedFamilies = [...families.values()].map(family => ({
+                ...family,
+                generation: 1 + Math.max(...family.parents.map(entry => generationFor(entry.character)))
+            })).sort((a, b) => a.generation - b.generation);
+            const legacyLineages = (world.genealogy || []).filter(tree =>
+                tree?.ancestor || tree?.house || (Array.isArray(tree?.descendants) && tree.descendants.length)
+            );
+            const legacyMarkup = legacyLineages.length
+                ? `<details class="mt-6 rounded border border-[#3a3a4d] p-4">
+                    <summary class="cursor-pointer text-gray-300">Older lineage notes (${legacyLineages.length})</summary>
+                    <p class="mt-2 text-sm text-gray-400">These records are preserved from an earlier version. The live tree above is now generated from character mother and father properties.</p>
+                    <div class="mt-3 space-y-2">${legacyLineages.map(tree => `<div class="rounded bg-[#191923] p-3"><strong>${escapeHtml(tree.house || 'Lineage')}</strong><div>${escapeHtml(tree.ancestor || '')}${tree.spouse ? ` &amp; ${escapeHtml(tree.spouse)}` : ''}</div><div class="text-gray-400">${escapeHtml((Array.isArray(tree.descendants) ? tree.descendants : []).join(', '))}</div></div>`).join('')}</div>
+                </details>`
+                : '';
+
+            if (!orderedFamilies.length) {
+                return `<p class="rounded border border-[#3a3a4d] p-4 text-gray-300">No family links yet. Edit a character, add a <strong>mother</strong> or <strong>father</strong> property, and choose a character to build this tree.</p>${legacyMarkup}`;
+            }
+
+            const familyMarkup = orderedFamilies.map(family => `
+                <section class="rounded border border-[#3a3a4d] bg-[#191923] p-4 sm:p-5">
+                    <h3 class="font-wiki-title text-sm text-amber-400 mb-4">Generation ${family.generation}</h3>
+                    <div class="flex flex-wrap justify-center gap-3">
+                        ${family.parents.map(({ character, relation }) => `
+                            <button onclick="openCharacterArticle('${escapeHtml(character.id)}')" class="min-w-36 rounded border border-amber-500/50 bg-[#232332] px-4 py-3 text-center hover:border-amber-300">
+                                <span class="block text-xs text-gray-400">${escapeHtml(relation)}</span>
+                                <span class="font-wiki-title text-amber-200">${escapeHtml(character.name)}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div class="my-3 text-center text-amber-400" aria-hidden="true">↓</div>
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        ${family.children.map(child => `
+                            <button onclick="openCharacterArticle('${escapeHtml(child.id)}')" class="rounded border border-[#45455b] bg-[#13131b] px-4 py-3 text-left hover:border-amber-400">
+                                <span class="block text-xs text-gray-400">Child</span>
+                                <span class="font-wiki-title text-white">${escapeHtml(child.name)}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </section>
+            `).join('');
+            const unconnected = world.characters.filter(character => !connected.has(character.id));
+
+            return `<div class="space-y-4">${familyMarkup}</div>
+                ${unconnected.length ? `<details class="mt-6 rounded border border-[#3a3a4d] p-4"><summary class="cursor-pointer text-gray-300">Characters without family links (${unconnected.length})</summary><div class="mt-3 grid gap-2 sm:grid-cols-2">${unconnected.map(character => `<button onclick="openCharacterArticle('${escapeHtml(character.id)}')" class="text-left text-amber-300 underline">${escapeHtml(character.name)}</button>`).join('')}</div></details>` : ''}
+                ${legacyMarkup}`;
+        }
+
         function renderArticleMarkdown(markdown, world, interactive = true) {
             const characterBySlug = new Map();
             world.characters.forEach(character => {
@@ -1068,17 +1132,17 @@
                 const listItem = line.match(/^\s*[-*]\s+(.+)$/);
                 if (listItem) {
                     if (!inList) { output.push('<ul class="list-disc ml-6 my-3">'); inList = true; }
-                    output.push(`<li>${formatArticleLine(listItem[1], characterBySlug)}</li>`);
+                    output.push(`<li>${formatArticleLine(listItem[1], characterBySlug, interactive)}</li>`);
                     continue;
                 }
                 if (inList) { output.push('</ul>'); inList = false; }
-                output.push(line ? formatArticleLine(line, characterBySlug) : '<div class="h-2"></div>');
+                output.push(line ? formatArticleLine(line, characterBySlug, interactive) : '<div class="h-2"></div>');
             }
             if (inList) output.push('</ul>');
             return output.join('');
         }
 
-        function formatArticleLine(line, characterBySlug) {
+        function formatArticleLine(line, characterBySlug, interactive) {
                 let safe = escapeHtml(line);
                 safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>');
                 safe = safe.replace(/@([\p{L}\d_-]+)/gu, (mention, name) => {
@@ -1275,13 +1339,6 @@
             return character ? (character.article || character.bio || '') : '';
         }
 
-        function setArticleTarget(key) {
-            currentArticleKey = key;
-            articleEditing = false;
-            pageEditingKey = null;
-            renderWikiContent();
-        }
-
         function openCharacterArticle(id) {
             currentArticleKey = id;
             currentWikiTab = 'articles';
@@ -1290,24 +1347,9 @@
             setWikiTab('articles');
         }
 
-        function editCharacterPage(id) {
-            currentArticleKey = id;
-            currentWikiTab = 'articles';
-            articleEditing = true;
-            pageEditingKey = null;
-            setWikiTab('articles');
-        }
-
-        function openCharacterArticleByName(slug) {
-            const world = worldsData.find(item => item.id === currentWorldId);
-            const character = world?.characters.find(item => characterSlug(item.name) === slug);
-            if (character) openCharacterArticle(character.id);
-        }
-
         function editArticle() {
             pageEditingKey = null;
             overviewEditing = false;
-            lineagesEditing = false;
             relationsEditing = false;
             articleEditing = true;
             renderWikiContent();
@@ -1344,7 +1386,7 @@
             try {
                 await saveWorld(world);
                 articleEditing = false;
-                renderWikiContent();
+                renderWiki();
                 showToast('* The character page hath been amended.');
             } catch (error) {
                 console.error('Could not save article:', error);
@@ -1370,10 +1412,8 @@
         }
 
         function editWikiPage(key) {
-            if (key === 'genealogy') { editLineages(); return; }
             if (key === 'relations') { editRelations(); return; }
             overviewEditing = false;
-            lineagesEditing = false;
             relationsEditing = false;
             articleEditing = false;
             pageEditingKey = key;
@@ -1428,7 +1468,6 @@
 
         function editWorldOverview() {
             pageEditingKey = null;
-            lineagesEditing = false;
             relationsEditing = false;
             articleEditing = false;
             overviewEditing = true;
@@ -1473,72 +1512,6 @@
             }
         }
 
-        function renderLineageEditor(world) {
-            return `<div class="max-w-3xl mx-auto"><div class="border-b border-[#323244] pb-4 mb-6"><div class="text-xs font-pixel text-amber-400 mb-2">EDIT THE FAMILY TREE</div><h1 class="font-wiki-title text-3xl font-bold text-white">Amend Lineages</h1></div>
-                <div id="lineage-editor-list" class="space-y-4">${world.genealogy.map(tree => `<div class="lineage-entry bg-[#1a1a24] border border-[#323246] rounded p-4 space-y-2">
-                    <input class="lineage-house w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="House" placeholder="House" value="${escapeHtml(tree.house)}">
-                    <div class="grid gap-2 sm:grid-cols-2"><input class="lineage-ancestor bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Ancestor" placeholder="Ancestor" value="${escapeHtml(tree.ancestor)}"><input class="lineage-spouse bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Consort" placeholder="Consort" value="${escapeHtml(tree.spouse)}"></div>
-                    <textarea class="lineage-descendants w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Descendants" placeholder="One descendant per line">${escapeHtml((tree.descendants || []).join('\n'))}</textarea>
-                </div>`).join('')}</div>
-                <button onclick="addLineageEditor()" class="mt-3 text-amber-300 underline">+ Add a lineage</button>
-                <div class="mt-6"><h2 class="font-wiki-title text-xl text-amber-400 mb-2">Article text</h2>${renderVisualEditor(world, 'page-genealogy', world.pages?.genealogy || '')}</div>
-                <div class="flex gap-2 mt-6"><button onclick="saveLineages()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save family tree</button><button onclick="lineagesEditing=false; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div></div>`;
-        }
-
-        function addLineageEditor() {
-            const row = document.createElement('div');
-            row.className = 'lineage-entry bg-[#1a1a24] border border-[#323246] rounded p-4 space-y-2';
-            row.innerHTML = '<input class="lineage-house w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="House" placeholder="House"><div class="grid gap-2 sm:grid-cols-2"><input class="lineage-ancestor bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Ancestor" placeholder="Ancestor"><input class="lineage-spouse bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Consort" placeholder="Consort"></div><textarea class="lineage-descendants w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Descendants" placeholder="One descendant per line"></textarea>';
-            document.getElementById('lineage-editor-list').appendChild(row);
-        }
-
-        function editLineages() {
-            pageEditingKey = null;
-            overviewEditing = false;
-            relationsEditing = false;
-            articleEditing = false;
-            lineagesEditing = true;
-            renderWikiContent();
-        }
-
-        async function saveLineages() {
-            const world = worldsData.find(item => item.id === currentWorldId);
-            const previous = world.genealogy;
-            const previousPage = world.pages?.genealogy || '';
-            const lineages = [];
-            for (const row of document.querySelectorAll('#lineage-editor-list .lineage-entry')) {
-                const house = row.querySelector('.lineage-house').value.trim();
-                const ancestor = row.querySelector('.lineage-ancestor').value.trim();
-                const spouse = row.querySelector('.lineage-spouse').value.trim();
-                const descendants = row.querySelector('.lineage-descendants').value.split(/\r?\n/).map(value => value.trim()).filter(Boolean);
-                if (!house && !ancestor && !spouse && !descendants.length) continue;
-                if (!house || !ancestor) {
-                    showToast('* Each lineage must name its house and ancestor.');
-                    return;
-                }
-                lineages.push({ house, ancestor, spouse, descendants });
-            }
-            try {
-                world.pages ||= {};
-                world.pages.genealogy = serializeVisualEditor('page-genealogy');
-            } catch (error) {
-                showToast('* The family-tree article could not be read.');
-                return;
-            }
-            world.genealogy = lineages;
-            try {
-                await saveWorld(world);
-                lineagesEditing = false;
-                renderWiki();
-                showToast('* The family tree hath been amended.');
-            } catch (error) {
-                console.error('Could not save family tree:', error);
-                world.genealogy = previous;
-                world.pages.genealogy = previousPage;
-                showToast('* The family tree could not be saved.');
-            }
-        }
-
         function renderRelationsEditor(world) {
             return `<div class="max-w-3xl mx-auto"><div class="border-b border-[#323244] pb-4 mb-6"><div class="text-xs font-pixel text-amber-400 mb-2">EDIT OATHS &amp; BONDS</div><h1 class="font-wiki-title text-3xl font-bold text-white">Amend Bonds &amp; Feuds</h1></div>
                 <div id="relations-editor-list" class="space-y-4">${world.relations.map(relation => `<div class="relation-entry bg-[#1a1a24] border border-[#323246] rounded p-4 space-y-2">
@@ -1560,7 +1533,6 @@
         function editRelations() {
             pageEditingKey = null;
             overviewEditing = false;
-            lineagesEditing = false;
             articleEditing = false;
             relationsEditing = true;
             renderWikiContent();
@@ -1606,16 +1578,29 @@
 
         function addCharacterProperty(name = '', value = '') {
             const row = document.createElement('div');
-            row.className = 'grid grid-cols-2 gap-2';
-            row.innerHTML = `<input aria-label="Property name" placeholder="e.g. mother" value="${escapeHtml(name)}" class="property-name bg-[#111118] border border-[#3a3a4d] rounded px-2 py-1 text-white"><input aria-label="Property value" placeholder="@character or value" value="${escapeHtml(value)}" class="property-value bg-[#111118] border border-[#3a3a4d] rounded px-2 py-1 text-white">`;
+            row.className = 'grid grid-cols-1 sm:grid-cols-2 gap-2';
+            row.innerHTML = `<input aria-label="Property name" placeholder="e.g. mother" value="${escapeHtml(name)}" class="property-name bg-[#111118] border border-[#3a3a4d] rounded px-2 py-1 text-white"><input aria-label="Property value" list="new-char-reference-options" placeholder="Choose a character or enter a value" value="${escapeHtml(value)}" class="property-value bg-[#111118] border border-[#3a3a4d] rounded px-2 py-1 text-white">`;
             document.getElementById('char-properties').appendChild(row);
         }
 
         function addCharacterPageProperty(name = '', value = '') {
             const row = document.createElement('div');
-            row.className = 'character-page-property grid grid-cols-2 gap-2 mt-2';
-            row.innerHTML = `<input aria-label="Property name" placeholder="Property name" value="${escapeHtml(name)}" class="page-property-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Property value" placeholder="Value or @character" value="${escapeHtml(value)}" class="page-property-value bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white">`;
+            row.className = 'character-page-property grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2';
+            row.innerHTML = `<input aria-label="Property name" placeholder="Property name (e.g. mother)" value="${escapeHtml(name)}" class="page-property-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Property value" list="character-page-reference-options" placeholder="Choose a character or enter a value" value="${escapeHtml(value)}" class="page-property-value bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white">`;
             document.getElementById('character-page-properties').appendChild(row);
+        }
+
+        function renderCharacterPropertyRows(world, character, listId) {
+            const properties = Object.entries(character.properties || {});
+            const rows = properties.length ? properties : [['mother', ''], ['father', '']];
+            return `${renderCharacterReferenceOptions(world, listId)}${rows.map(([key, value]) => `<div class="character-page-property grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2"><input aria-label="Property name" placeholder="Property name (e.g. mother)" value="${escapeHtml(key)}" class="page-property-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Property value" list="${listId}" placeholder="Choose a character or enter a value" value="${escapeHtml(value)}" class="page-property-value bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></div>`).join('')}`;
+        }
+
+        function renderPropertyValue(world, value) {
+            const character = resolveCharacterReference(world, value);
+            return character
+                ? `<button onclick="openCharacterArticle('${escapeHtml(character.id)}')" class="text-amber-300 underline">${escapeHtml(character.name)}</button>`
+                : escapeHtml(value);
         }
 
         async function addArticleImage(file) {
@@ -1745,7 +1730,6 @@
             articleEditing = false;
             overviewEditing = false;
             pageEditingKey = null;
-            lineagesEditing = false;
             relationsEditing = false;
             renderWiki();
         }
@@ -1774,7 +1758,10 @@
 
             // Update sidebar stats
             document.getElementById('stat-chars').textContent = world.characters.length;
-            document.getElementById('stat-houses').textContent = world.genealogy.length;
+            document.getElementById('stat-houses').textContent = world.characters.reduce(
+                (count, character) => count + getCharacterParents(world, character).length,
+                0
+            );
             document.getElementById('stat-relations').textContent = world.relations.length;
 
             renderWikiContent();
@@ -1788,26 +1775,34 @@
             }
             if (!character) return `<div><h1 class="font-wiki-title text-3xl text-white">Character articles</h1><p class="mt-4 text-gray-300">No characters are yet inscribed.</p><button onclick="openNewCharModal()" class="mt-4 px-4 py-2 bg-amber-600 text-black rounded">Add a character</button></div>`;
             const article = character.article || character.bio || '';
-            const options = world.characters.map(item => `<option value="${escapeHtml(item.id)}" ${currentArticleKey === item.id ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('');
             const page = articleEditing
                 ? `<div class="space-y-5">
+                    <header class="border-b border-[#323244] pb-4">
+                        <div class="text-xs font-pixel text-amber-400 mb-2">EDIT CHARACTER PAGE</div>
+                        <h1 class="font-wiki-title text-3xl font-bold text-white">${escapeHtml(character.name)}</h1>
+                    </header>
                     <section class="grid gap-3 sm:grid-cols-2">
                         <label class="text-sm text-amber-300">Name<input id="character-page-name" value="${escapeHtml(character.name)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
                         <label class="text-sm text-amber-300">House<input id="character-page-house" value="${escapeHtml(character.house)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
                         <label class="text-sm text-amber-300">Role<input id="character-page-role" value="${escapeHtml(character.role)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
                         <label class="text-sm text-amber-300">Status<select id="character-page-status" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><option ${character.status === 'Living' ? 'selected' : ''}>Living</option><option ${character.status === 'Deceased' ? 'selected' : ''}>Deceased</option><option ${character.status === 'Unknown' ? 'selected' : ''}>Unknown</option></select></label>
                     </section>
-                    <section><h2 class="font-wiki-title text-lg text-amber-400">Properties</h2><div id="character-page-properties">${Object.entries(character.properties || {}).map(([key, value]) => `<div class="character-page-property grid grid-cols-2 gap-2 mt-2"><input aria-label="Property name" value="${escapeHtml(key)}" class="page-property-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Property value" value="${escapeHtml(value)}" class="page-property-value bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></div>`).join('')}</div><button type="button" onclick="addCharacterPageProperty()" class="mt-2 text-amber-300 underline">+ Add property</button></section>
+                    <section>
+                        <h2 class="font-wiki-title text-lg text-amber-400">Properties</h2>
+                        <p class="text-sm text-gray-400 mt-1">For the family tree, add a mother or father and choose a character from the suggestions.</p>
+                        <div id="character-page-properties" class="mt-2">${renderCharacterPropertyRows(world, character, 'character-page-reference-options')}</div>
+                        <button type="button" onclick="addCharacterPageProperty()" class="mt-2 text-amber-300 underline">+ Add property</button>
+                    </section>
                     <div><h2 class="font-wiki-title text-xl text-amber-400 mb-2">Article</h2>${renderVisualEditor(world, 'character-article-editor', article)}</div>
                     <div class="flex gap-2"><button onclick="saveArticle()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save page</button><button onclick="articleEditing=false; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div>
                   </div>`
                 : `<div class="flex flex-wrap items-start justify-between gap-4 border-b border-[#323244] pb-4 mb-6">
-                       <div><div class="text-xs text-amber-400 mb-1">CHARACTER</div><h1 class="font-wiki-title text-3xl font-bold text-white">${escapeHtml(character.name)}</h1><p class="text-gray-400 mt-1">${escapeHtml(character.role || '')}</p></div>
-                       <div class="flex items-center gap-3"><select aria-label="Choose character" onchange="setArticleTarget(this.value)" class="bg-[#0e0e14] border border-[#3a3a4d] rounded px-2 py-2 text-white">${options}</select><button onclick="editArticle()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Edit</button></div>
+                       <div><button onclick="setWikiTab('characters')" class="text-sm text-amber-300 underline mb-3">← Characters</button><div class="text-xs text-amber-400 mb-1">CHARACTER</div><h1 class="font-wiki-title text-3xl font-bold text-white">${escapeHtml(character.name)}</h1><p class="text-gray-400 mt-1">${escapeHtml(character.role || '')}</p></div>
+                       <button onclick="editArticle()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Edit</button>
                    </div>
                    <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem]">
                        <article class="article-content leading-relaxed text-lg">${renderArticleMarkdown(article, world)}</article>
-                       <aside class="border border-[#3a3a4d] p-4 h-fit"><h2 class="font-wiki-title text-center text-amber-300 mb-3">${escapeHtml(character.name)}</h2><dl class="space-y-2 text-sm"><div><dt class="text-gray-400">House</dt><dd>${escapeHtml(character.house || '')}</dd></div><div><dt class="text-gray-400">Role</dt><dd>${escapeHtml(character.role || '')}</dd></div><div><dt class="text-gray-400">Status</dt><dd>${escapeHtml(character.status || '')}</dd></div>${Object.entries(character.properties || {}).map(([key, value]) => `<div><dt class="text-gray-400">${escapeHtml(key)}</dt><dd>${escapeHtml(value)}</dd></div>`).join('')}</dl></aside>
+                       <aside class="border border-[#3a3a4d] p-4 h-fit"><h2 class="font-wiki-title text-center text-amber-300 mb-3">${escapeHtml(character.name)}</h2><dl class="space-y-2 text-sm"><div><dt class="text-gray-400">House</dt><dd>${escapeHtml(character.house || '')}</dd></div><div><dt class="text-gray-400">Role</dt><dd>${escapeHtml(character.role || '')}</dd></div><div><dt class="text-gray-400">Status</dt><dd>${escapeHtml(character.status || '')}</dd></div>${Object.entries(character.properties || {}).map(([key, value]) => `<div><dt class="text-gray-400">${escapeHtml(key)}</dt><dd>${renderPropertyValue(world, value)}</dd></div>`).join('')}</dl></aside>
                    </div>`;
             return `<div>${page}</div>`;
         }
@@ -1961,117 +1956,29 @@
                             + Inscribe New Character
                         </button>
                     </div>
-
-                    <p class="font-wiki-body italic text-lg text-gray-300 mb-6">
-                        "All the world’s a stage, and all the men and women merely players..."
-                    </p>
                     ${renderPageArticle(world, 'characters')}
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
                         ${world.characters.map(char => `
-                            <div class="bg-[#1a1a24] border border-[#323246] hover:border-amber-500/60 rounded-lg p-5 transition-all flex flex-col justify-between shadow-md">
-                                <div>
-                                    <div class="flex items-start justify-between gap-2 mb-2">
-                                        <h3 class="font-wiki-title text-xl font-bold text-amber-300">${escapeHtml(char.name)}</h3>
-                                        <span class="text-xs font-pixel px-2 py-1 rounded ${char.status === 'Living' ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-500/40' : 'bg-red-900/50 text-red-300 border border-red-500/40'}">
-                                            ${escapeHtml(char.status)}
-                                        </span>
-                                    </div>
-                                    <div class="text-sm font-wiki-title text-gray-400 mb-3">
-                                        ${escapeHtml(char.house)} • <span class="text-amber-200/80">${escapeHtml(char.role)}</span>
-                                    </div>
-                                    <p class="font-wiki-body text-lg text-gray-200 leading-relaxed">
-                                        ${escapeHtml(char.bio)}
-                                    </p>
-                                </div>
-                                <div class="mt-4 pt-3 border-t border-[#2a2a3a] flex justify-between items-center text-xs font-wiki-title text-gray-500">
-                                    <span>Character ID: #${escapeHtml(char.id.toUpperCase())}</span>
-                                    <div class="flex gap-3"><button onclick="editCharacterPage('${escapeHtml(char.id)}')" class="text-amber-300 underline">Edit</button><button onclick="openCharacterArticle('${escapeHtml(char.id)}')" class="text-amber-400/70 underline">View</button></div>
-                                </div>
-                            </div>
+                            <button onclick="openCharacterArticle('${escapeHtml(char.id)}')" class="w-full rounded border border-[#323246] bg-[#1a1a24] p-4 text-left transition-colors hover:border-amber-500/60 hover:bg-[#20202b]">
+                                <span class="flex flex-wrap items-center justify-between gap-2">
+                                    <span class="font-wiki-title text-lg text-amber-300">${escapeHtml(char.name)}</span>
+                                    <span class="text-xs text-gray-400">${escapeHtml(char.role || '')}</span>
+                                </span>
+                                <span class="mt-1 block text-sm text-gray-400">${escapeHtml(char.house || '')}</span>
+                                <span class="mt-2 block font-wiki-body text-gray-200">${escapeHtml(char.bio || '')}</span>
+                            </button>
                         `).join('')}
                     </div>
                 `;
             } else if (currentWikiTab === 'genealogy') {
-                if (lineagesEditing) {
-                    container.innerHTML = renderLineageEditor(world);
-                    return;
-                }
                 container.innerHTML = `
-                    <div class="border-b border-[#323244] pb-4 mb-6">
-                        <div class="flex flex-wrap items-center justify-between gap-3"><div><div class="text-xs font-pixel text-amber-400 mb-1">LINEAGES &amp; BLOODLINES</div><h1 class="font-wiki-title text-3xl font-bold text-white">Family Tree</h1></div><button onclick="editLineages()" class="px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Edit</button></div>
-                    </div>
-
-                    <p class="font-wiki-body italic text-lg text-gray-300 mb-8">
-                        "Behold the noble boughs and ancient roots whence the rulers of ${escapeHtml(world.name)} do spring."
-                    </p>
-
-                    <div class="space-y-8">
-                        ${world.genealogy.map(tree => `
-                            <div class="bg-[#191923] border border-[#323246] rounded-lg p-6">
-                                <h3 class="font-wiki-title text-xl font-bold text-amber-400 text-center mb-6 border-b border-[#2e2e3e] pb-3">
-                                    ${escapeHtml(tree.house)}
-                                </h3>
-
-                                <!-- Visual Family Tree Structure -->
-                                <div class="flex flex-col items-center">
-                                    <!-- Ancestors / Parents -->
-                                    <div class="flex flex-wrap justify-center items-center gap-4">
-                                        <div class="bg-[#232332] border-2 border-amber-500/60 px-4 py-3 rounded text-center min-w-[180px]">
-                                            <div class="text-[10px] font-pixel text-amber-400 mb-1">PROGENITOR</div>
-                                            <div class="font-wiki-title font-bold text-white">${escapeHtml(tree.ancestor)}</div>
-                                        </div>
-                                        <span class="font-wiki-title text-amber-400 text-xl">⚭</span>
-                                        <div class="bg-[#232332] border-2 border-amber-500/60 px-4 py-3 rounded text-center min-w-[180px]">
-                                            <div class="text-[10px] font-pixel text-amber-400 mb-1">CONSORT</div>
-                                            <div class="font-wiki-title font-bold text-white">${escapeHtml(tree.spouse)}</div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Vertical Line Down -->
-                                    <div class="w-0.5 h-8 bg-amber-500/70"></div>
-
-                                    <!-- Horizontal Connector Bar -->
-                                    <div class="w-48 sm:w-64 h-0.5 bg-amber-500/70"></div>
-
-                                    <!-- Descendants -->
-                                    <div class="flex flex-wrap justify-center gap-6 mt-4">
-                                        ${tree.descendants.map(child => `
-                                            <div class="tree-node tree-branch bg-[#13131b] border border-amber-400/50 px-4 py-3 rounded text-center min-w-[170px]">
-                                                <div class="text-[10px] font-pixel text-gray-400 mb-1">HEIR / ISSUE</div>
-                                                <div class="font-wiki-title font-semibold text-amber-200">${escapeHtml(child)}</div>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="mt-8 border-t border-[#323244] pt-5">
-                        <h2 class="font-wiki-title text-xl text-amber-400 mb-3">Kinship Properties</h2>
-                        <div class="flex flex-wrap gap-3">
-                            ${world.characters.flatMap(child => Object.entries(child.properties || {})
-                                .filter(([key, value]) => /mother|father|parent/i.test(key) && resolveCharacterReference(world, value))
-                                .map(([key, value]) => ({ child, parent: resolveCharacterReference(world, value), key }))).map(line => `
-                                <div class="bg-[#1a1a24] border border-[#323246] rounded p-3">
-                                    <div class="font-wiki-body text-gray-400">${escapeHtml(line.key)}</div>
-                                    <button onclick="openCharacterArticle('${line.parent.id}')" class="font-wiki-title text-amber-300 underline">${escapeHtml(line.parent.name)}</button>
-                                    <div class="text-amber-400 text-center">↓</div>
-                                    <button onclick="openCharacterArticle('${line.child.id}')" class="font-wiki-title text-amber-200 underline">${escapeHtml(line.child.name)}</button>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <h3 class="font-wiki-title text-lg text-amber-300 mt-6 mb-2">Other Properties</h3>
-                        <div class="flex flex-wrap gap-3">
-                            ${world.characters.filter(char => Object.entries(char.properties || {}).some(([key]) => !/mother|father|parent/i.test(key))).map(char => `
-                                <div class="bg-[#1a1a24] border border-[#323246] rounded p-3">
-                                    <button onclick="openCharacterArticle('${char.id}')" class="font-wiki-title text-amber-300 underline">${escapeHtml(char.name)}</button>
-                                    ${Object.entries(char.properties).filter(([key]) => !/mother|father|parent/i.test(key)).map(([key, value]) => `<div class="font-wiki-body text-gray-300">${escapeHtml(key)}: ${escapeHtml(value)}</div>`).join('')}
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    ${renderPageArticle(world, 'genealogy', false)}
+                    <header class="border-b border-[#323244] pb-4 mb-5">
+                        <div class="text-xs font-pixel text-amber-400 mb-2">FAMILY &amp; DESCENDANTS</div>
+                        <h1 class="font-wiki-title text-3xl font-bold text-white">Family Tree</h1>
+                    </header>
+                    <p class="mb-5 text-gray-300">This tree is built from character pages. Edit a character and set <strong>mother</strong> or <strong>father</strong> to a person in this realm; the family link will appear here when saved.</p>
+                    ${renderGeneratedFamilyTree(world)}
+                    ${renderPageArticle(world, 'genealogy')}
                 `;
             } else if (currentWikiTab === 'relations') {
                 if (relationsEditing) {
@@ -2160,14 +2067,7 @@
                         bio: 'Bearing a single brass lantern, this lone traveler walketh the uncharted paths of ' + nameInput + '.'
                     }
                 ],
-                genealogy: [
-                    {
-                        house: 'House of the First Dawn',
-                        ancestor: 'The Unnamed Founder',
-                        spouse: 'Lady Fortune',
-                        descendants: ['Heirs Yet Unborn']
-                    }
-                ],
+                genealogy: [],
                 relations: [
                     {
                         from: 'The First Pilgrim',
@@ -2201,6 +2101,10 @@
             document.getElementById('char-save-button').textContent = 'Inscribe Character';
             ['char-name', 'char-house', 'char-role', 'char-bio'].forEach(id => { document.getElementById(id).value = ''; });
             document.getElementById('char-status').value = 'Living';
+            const world = worldsData.find(item => item.id === currentWorldId);
+            document.getElementById('new-char-reference-options').innerHTML = world.characters.map(character =>
+                `<option value="@${characterSlug(character.name)}" label="${escapeHtml(character.name)}"></option>`
+            ).join('');
             document.getElementById('char-properties').innerHTML = '';
             addCharacterProperty('mother');
             addCharacterProperty('father');
