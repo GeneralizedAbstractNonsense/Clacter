@@ -711,7 +711,6 @@
         let pageEditingKey = null;
         let lineagesEditing = false;
         let relationsEditing = false;
-        let editingCharacterId = null;
         let installPrompt = null;
         const DB_NAME = 'clacter-worlds';
         const DB_VERSION = 1;
@@ -789,7 +788,7 @@
             );
         }
 
-        function renderArticleMarkdown(markdown, world) {
+        function renderArticleMarkdown(markdown, world, interactive = true) {
             const characterBySlug = new Map();
             world.characters.forEach(character => {
                 characterBySlug.set(characterSlug(character.name), character);
@@ -801,7 +800,7 @@
                 const image = line.match(/^\[\[image:([^|\]]+)(?:\|([^|\]]*))?(?:\|(left|right))?\]\]$/i);
                 if (image) {
                     if (inList) { output.push('</ul>'); inList = false; }
-                    output.push(`<figure class="article-image ${image[3] === 'left' ? 'float-left mr-5' : 'float-right ml-5'} mb-4 max-w-[16rem] border border-[#3a3a4d] bg-[#1a1a24] p-2"><img alt="${escapeHtml(image[2] || image[1])}" data-world-image="${escapeHtml(image[1])}" class="w-full max-h-64 object-contain"><figcaption class="text-center text-gray-300 text-sm mt-2">${escapeHtml(image[2] || image[1])}</figcaption></figure>`);
+                    output.push(`<figure data-image-file="${escapeHtml(image[1])}" data-image-side="${image[3] || 'right'}" class="article-image ${image[3] === 'left' ? 'float-left mr-5' : 'float-right ml-5'} mb-4 max-w-[16rem] border border-[#3a3a4d] bg-[#1a1a24] p-2"><img alt="${escapeHtml(image[2] || image[1])}" data-world-image="${escapeHtml(image[1])}" class="w-full max-h-64 object-contain"><figcaption class="text-center text-gray-300 text-sm mt-2">${escapeHtml(image[2] || image[1])}</figcaption></figure>`);
                     continue;
                 }
                 const listItem = line.match(/^\s*[-*]\s+(.+)$/);
@@ -822,13 +821,121 @@
                 safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>');
                 safe = safe.replace(/@([\p{L}\d_-]+)/gu, (mention, name) => {
                     const character = characterBySlug.get(characterSlug(name.replace(/_/g, ' ')));
-                    return character
+                    return character && interactive
                         ? `<button class="text-amber-300 underline" onclick="openCharacterArticle('${escapeHtml(character.id)}')">@${escapeHtml(name)}</button>`
                         : `<span class="text-amber-300">@${escapeHtml(name)}</span>`;
                 });
                 const heading = safe.match(/^(#{1,3})\s+(.+)$/);
                 if (heading) return `<h${heading[1].length + 1}>${heading[2]}</h${heading[1].length + 1}>`;
                 return `<p>${safe}</p>`;
+        }
+
+        function renderVisualEditor(world, editorId, markdown) {
+            return `<div class="visual-editor space-y-3">
+                <div role="toolbar" aria-label="Article formatting" class="flex flex-wrap gap-2 border-y border-[#3a3a4d] py-2">
+                    <button type="button" onclick="insertEditorBlock('${editorId}','section')" class="border border-[#3a3a4d] rounded px-2 py-1 text-sm hover:border-amber-400">+ Section</button>
+                    <button type="button" onclick="insertEditorBlock('${editorId}','paragraph')" class="border border-[#3a3a4d] rounded px-2 py-1 text-sm hover:border-amber-400">+ Text</button>
+                    <button type="button" onclick="document.execCommand('bold')" class="border border-[#3a3a4d] rounded px-2 py-1 text-sm hover:border-amber-400"><strong>Bold</strong></button>
+                    <label class="cursor-pointer border border-[#3a3a4d] rounded px-2 py-1 text-sm hover:border-amber-400">+ Image<input type="file" accept="image/*" class="hidden" onchange="insertVisualImage(this.files[0],'${editorId}'); this.value='';"></label>
+                </div>
+                <div id="${editorId}" class="article-content visual-article-editor min-h-64 border border-[#3a3a4d] rounded p-4 text-lg" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="true">${markdown ? renderArticleMarkdown(markdown, world, false) : '<p><br></p>'}</div>
+            </div>`;
+        }
+
+        function serializeEditorInline(node) {
+            if (node.nodeType === Node.TEXT_NODE) return node.nodeValue;
+            if (node.nodeType !== Node.ELEMENT_NODE) return '';
+            const text = [...node.childNodes].map(serializeEditorInline).join('');
+            if (node.tagName === 'BR') return '\n';
+            if (node.tagName === 'STRONG' || node.tagName === 'B') return `**${text}**`;
+            if (node.tagName === 'EM' || node.tagName === 'I') return `*${text}*`;
+            return text;
+        }
+
+        function serializeVisualEditor(editorId) {
+            const editor = document.getElementById(editorId);
+            if (!editor) throw new Error('The article editor is no longer available.');
+            const lines = [];
+            const visit = node => {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    if (node.nodeValue.trim()) lines.push(node.nodeValue.trim());
+                    return;
+                }
+                if (node.nodeType !== Node.ELEMENT_NODE) return;
+                if (node.tagName === 'FIGURE' && node.dataset.imageFile) {
+                    const caption = node.querySelector('figcaption')?.textContent.trim() || node.dataset.imageFile;
+                    lines.push(`[[image:${node.dataset.imageFile}|${caption}|${node.dataset.imageSide || 'right'}]]`);
+                } else if (node.tagName === 'H2' || node.tagName === 'H3') {
+                    const depth = node.tagName === 'H2' ? '##' : '###';
+                    lines.push(`${depth} ${serializeEditorInline(node).trim()}`);
+                } else if (node.tagName === 'UL' || node.tagName === 'OL') {
+                    [...node.children].filter(child => child.tagName === 'LI').forEach(child => lines.push(`- ${serializeEditorInline(child).trim()}`));
+                } else if (node.tagName === 'P') {
+                    const text = serializeEditorInline(node).trim();
+                    if (text) lines.push(text);
+                } else {
+                    [...node.childNodes].forEach(visit);
+                }
+            };
+            [...editor.childNodes].forEach(visit);
+            return lines.join('\n\n');
+        }
+
+        function insertEditorBlock(editorId, kind) {
+            const editor = document.getElementById(editorId);
+            if (!editor) return;
+            const heading = document.createElement(kind === 'section' ? 'h2' : 'p');
+            heading.textContent = kind === 'section' ? 'New section' : 'Write here…';
+            const paragraph = kind === 'section' ? document.createElement('p') : null;
+            if (paragraph) paragraph.innerHTML = '<br>';
+            const selection = window.getSelection();
+            let range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+            if (!range || !editor.contains(range.startContainer)) {
+                range = document.createRange();
+                range.selectNodeContents(editor);
+                range.collapse(false);
+            } else {
+                range.deleteContents();
+            }
+            const fragment = document.createDocumentFragment();
+            fragment.append(heading);
+            if (paragraph) fragment.append(paragraph);
+            range.insertNode(fragment);
+            const caret = document.createRange();
+            caret.selectNodeContents(heading);
+            caret.collapse(false);
+            selection.removeAllRanges();
+            selection.addRange(caret);
+            editor.focus();
+        }
+
+        async function insertVisualImage(file, editorId) {
+            if (!file) return;
+            const world = worldsData.find(item => item.id === currentWorldId);
+            try {
+                const filename = await storeWorldImage(world, file);
+                const editor = document.getElementById(editorId);
+                if (!editor) throw new Error('The article editor is no longer available.');
+                const figure = document.createElement('figure');
+                figure.dataset.imageFile = filename;
+                figure.dataset.imageSide = 'right';
+                figure.className = 'article-image float-right ml-5 mb-4 max-w-[16rem] border border-[#3a3a4d] bg-[#1a1a24] p-2';
+                const image = document.createElement('img');
+                image.src = URL.createObjectURL(file);
+                image.alt = filename;
+                image.className = 'w-full max-h-64 object-contain';
+                const caption = document.createElement('figcaption');
+                caption.className = 'text-center text-gray-300 text-sm mt-2';
+                caption.textContent = filename;
+                figure.append(image, caption);
+                const selection = window.getSelection();
+                const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+                if (range && editor.contains(range.startContainer)) range.insertNode(figure);
+                else editor.append(figure);
+            } catch (error) {
+                console.error('Could not insert image:', error);
+                showToast('* This image could not be added to the article.');
+            }
         }
 
         async function attachArticleImages(container, world) {
@@ -909,6 +1016,7 @@
         function setArticleTarget(key) {
             currentArticleKey = key;
             articleEditing = false;
+            pageEditingKey = null;
             renderWikiContent();
         }
 
@@ -916,6 +1024,15 @@
             currentArticleKey = id;
             currentWikiTab = 'articles';
             articleEditing = false;
+            pageEditingKey = null;
+            setWikiTab('articles');
+        }
+
+        function editCharacterPage(id) {
+            currentArticleKey = id;
+            currentWikiTab = 'articles';
+            articleEditing = true;
+            pageEditingKey = null;
             setWikiTab('articles');
         }
 
@@ -926,60 +1043,92 @@
         }
 
         function editArticle() {
+            pageEditingKey = null;
+            overviewEditing = false;
+            lineagesEditing = false;
+            relationsEditing = false;
             articleEditing = true;
             renderWikiContent();
-            document.getElementById('article-editor')?.focus();
+            document.getElementById('character-article-editor')?.focus();
         }
 
         async function saveArticle() {
             const world = worldsData.find(item => item.id === currentWorldId);
-            const article = document.getElementById('article-editor').value;
-            if (currentArticleKey === 'world') world.article = article;
-            else {
-                const character = world.characters.find(item => item.id === currentArticleKey);
-                if (character) character.article = article;
-            }
-            articleEditing = false;
-            try {
-                await saveWorld(world);
-            } catch (error) {
-                console.error('Could not save article:', error);
-                articleEditing = true;
-                showToast('* Thy article could not be saved to this device.');
+            const character = world.characters.find(item => item.id === currentArticleKey);
+            if (!character) return;
+            const previous = { ...character };
+            const name = document.getElementById('character-page-name').value.trim();
+            if (!name) {
+                showToast('* Pray give this character a name.');
                 return;
             }
-            renderWikiContent();
-            showToast('* Thy article hath been inscribed.');
+            character.name = name;
+            character.house = document.getElementById('character-page-house').value.trim();
+            character.role = document.getElementById('character-page-role').value.trim();
+            character.status = document.getElementById('character-page-status').value;
+            character.properties = {};
+            document.querySelectorAll('#character-page-properties .character-page-property').forEach(row => {
+                const key = row.querySelector('.page-property-name').value.trim();
+                const value = row.querySelector('.page-property-value').value.trim();
+                if (key && value) character.properties[key] = value;
+            });
+            try {
+                character.article = serializeVisualEditor('character-article-editor');
+            } catch (error) {
+                Object.assign(character, previous);
+                showToast('* The character article could not be read.');
+                return;
+            }
+            try {
+                await saveWorld(world);
+                articleEditing = false;
+                renderWikiContent();
+                showToast('* The character page hath been amended.');
+            } catch (error) {
+                console.error('Could not save article:', error);
+                Object.assign(character, previous);
+                showToast('* This character page could not be saved to this device.');
+            }
         }
 
-        function renderPageArticle(world, key) {
+        function renderPageArticle(world, key, showEdit = true) {
             const text = world.pages?.[key] || '';
             if (pageEditingKey === key) {
                 return `<section class="mt-8 border-t border-[#323244] pt-5">
-                    <h2 class="font-wiki-title text-xl text-amber-400 mb-3">Edit this page</h2>
-                    <textarea id="page-article-editor" rows="8" class="article-editor w-full bg-[#0e0e14] border border-[#3a3a4d] rounded p-4 text-gray-100 font-mono text-sm" placeholder="# Chronicle&#10;&#10;Write this page in simple Markdown.">${escapeHtml(text)}</textarea>
-                    <p class="text-sm text-gray-400 mt-2">Headings, **bold**, *italic*, lists, @character links, and image captions are supported.</p>
+                    <h2 class="font-wiki-title text-xl text-amber-400 mb-3">Page text</h2>
+                    ${renderVisualEditor(world, `page-${key}`, text)}
                     <div class="flex gap-2 mt-3"><button onclick="saveWikiPage('${key}')" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save page</button><button onclick="pageEditingKey=null; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div>
                 </section>`;
             }
             return `<section class="mt-8 border-t border-[#323244] pt-5">
-                <h2 class="font-wiki-title text-xl text-amber-400 mb-3">Chronicle of this page</h2>
+                ${text ? '<h2 class="font-wiki-title text-xl text-amber-400 mb-3">Chronicle</h2>' : ''}
                 <div class="article-content text-lg">${text ? renderArticleMarkdown(text, world) : '<p class="italic text-gray-400">No page chronicle hath yet been written.</p>'}</div>
-                <button onclick="editWikiPage('${key}')" class="mt-3 px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Edit page</button>
+                ${showEdit ? `<button onclick="editWikiPage('${key}')" class="mt-3 px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Edit</button>` : ''}
             </section>`;
         }
 
         function editWikiPage(key) {
+            if (key === 'genealogy') { editLineages(); return; }
+            if (key === 'relations') { editRelations(); return; }
+            overviewEditing = false;
+            lineagesEditing = false;
+            relationsEditing = false;
+            articleEditing = false;
             pageEditingKey = key;
             renderWikiContent();
-            document.getElementById('page-article-editor')?.focus();
+            document.getElementById(`page-${key}`)?.focus();
         }
 
         async function saveWikiPage(key) {
             const world = worldsData.find(item => item.id === currentWorldId);
             world.pages ||= {};
             const previous = world.pages[key] || '';
-            world.pages[key] = document.getElementById('page-article-editor').value;
+            try {
+                world.pages[key] = serializeVisualEditor(`page-${key}`);
+            } catch (error) {
+                showToast('* The page editor could not be read.');
+                return;
+            }
             try {
                 await saveWorld(world);
                 pageEditingKey = null;
@@ -1001,7 +1150,7 @@
                     <label class="block text-amber-300">Current epoch<input id="overview-era" value="${escapeHtml(world.era)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
                     <label class="block text-amber-300">High seat<input id="overview-capital" value="${escapeHtml(world.capital)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
                     <label class="block text-amber-300">Sovereign<input id="overview-sovereign" value="${escapeHtml(world.sovereign)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
-                    <label class="block text-amber-300">Genesis &amp; chronicle<textarea id="overview-lore" rows="5" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white">${escapeHtml(world.lore)}</textarea></label>
+                    <div><label class="block text-amber-300 mb-2">Genesis &amp; chronicle</label>${renderVisualEditor(world, 'overview-article-editor', world.article || world.lore || '')}</div>
                     <div><h2 class="font-wiki-title text-amber-300 mb-2">Provinces &amp; landmarks</h2><div id="geography-editor" class="space-y-2">${world.geography.map(location => `<div class="geography-entry grid gap-2 sm:grid-cols-2"><input aria-label="Province name" value="${escapeHtml(location.name)}" placeholder="Place name" class="geography-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Province description" value="${escapeHtml(location.desc)}" placeholder="Description" class="geography-desc bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></div>`).join('')}</div><button onclick="addGeographyRow()" class="mt-2 text-amber-300 underline">+ Add a province</button></div>
                 </div>
                 <div class="flex gap-2 mt-6"><button onclick="saveWorldOverview()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save overview</button><button onclick="overviewEditing=false; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div>
@@ -1016,6 +1165,10 @@
         }
 
         function editWorldOverview() {
+            pageEditingKey = null;
+            lineagesEditing = false;
+            relationsEditing = false;
+            articleEditing = false;
             overviewEditing = true;
             renderWikiContent();
         }
@@ -1033,7 +1186,14 @@
             world.era = document.getElementById('overview-era').value.trim();
             world.capital = document.getElementById('overview-capital').value.trim();
             world.sovereign = document.getElementById('overview-sovereign').value.trim();
-            world.lore = document.getElementById('overview-lore').value.trim();
+            try {
+                world.lore = serializeVisualEditor('overview-article-editor');
+            } catch (error) {
+                Object.assign(world, previous);
+                showToast('* The overview article could not be read.');
+                return;
+            }
+            world.article = world.lore;
             world.geography = [...document.querySelectorAll('#geography-editor .geography-entry')].map(row => ({
                 name: row.querySelector('.geography-name').value.trim(),
                 desc: row.querySelector('.geography-desc').value.trim()
@@ -1059,6 +1219,7 @@
                     <textarea class="lineage-descendants w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Descendants" placeholder="One descendant per line">${escapeHtml((tree.descendants || []).join('\n'))}</textarea>
                 </div>`).join('')}</div>
                 <button onclick="addLineageEditor()" class="mt-3 text-amber-300 underline">+ Add a lineage</button>
+                <div class="mt-6"><h2 class="font-wiki-title text-xl text-amber-400 mb-2">Article text</h2>${renderVisualEditor(world, 'page-genealogy', world.pages?.genealogy || '')}</div>
                 <div class="flex gap-2 mt-6"><button onclick="saveLineages()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save family tree</button><button onclick="lineagesEditing=false; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div></div>`;
         }
 
@@ -1070,6 +1231,10 @@
         }
 
         function editLineages() {
+            pageEditingKey = null;
+            overviewEditing = false;
+            relationsEditing = false;
+            articleEditing = false;
             lineagesEditing = true;
             renderWikiContent();
         }
@@ -1077,6 +1242,7 @@
         async function saveLineages() {
             const world = worldsData.find(item => item.id === currentWorldId);
             const previous = world.genealogy;
+            const previousPage = world.pages?.genealogy || '';
             const lineages = [];
             for (const row of document.querySelectorAll('#lineage-editor-list .lineage-entry')) {
                 const house = row.querySelector('.lineage-house').value.trim();
@@ -1090,6 +1256,13 @@
                 }
                 lineages.push({ house, ancestor, spouse, descendants });
             }
+            try {
+                world.pages ||= {};
+                world.pages.genealogy = serializeVisualEditor('page-genealogy');
+            } catch (error) {
+                showToast('* The family-tree article could not be read.');
+                return;
+            }
             world.genealogy = lineages;
             try {
                 await saveWorld(world);
@@ -1099,6 +1272,7 @@
             } catch (error) {
                 console.error('Could not save family tree:', error);
                 world.genealogy = previous;
+                world.pages.genealogy = previousPage;
                 showToast('* The family tree could not be saved.');
             }
         }
@@ -1110,6 +1284,7 @@
                     <textarea class="relation-desc w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white" aria-label="Description" placeholder="The tale of their bond">${escapeHtml(relation.desc)}</textarea>
                 </div>`).join('')}</div>
                 <button onclick="addRelationEditor()" class="mt-3 text-amber-300 underline">+ Add a bond or feud</button>
+                <div class="mt-6"><h2 class="font-wiki-title text-xl text-amber-400 mb-2">Article text</h2>${renderVisualEditor(world, 'page-relations', world.pages?.relations || '')}</div>
                 <div class="flex gap-2 mt-6"><button onclick="saveRelations()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save bonds</button><button onclick="relationsEditing=false; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div></div>`;
         }
 
@@ -1121,6 +1296,10 @@
         }
 
         function editRelations() {
+            pageEditingKey = null;
+            overviewEditing = false;
+            lineagesEditing = false;
+            articleEditing = false;
             relationsEditing = true;
             renderWikiContent();
         }
@@ -1128,6 +1307,7 @@
         async function saveRelations() {
             const world = worldsData.find(item => item.id === currentWorldId);
             const previous = world.relations;
+            const previousPage = world.pages?.relations || '';
             const relations = [];
             for (const row of document.querySelectorAll('#relations-editor-list .relation-entry')) {
                 const from = row.querySelector('.relation-from').value.trim();
@@ -1141,6 +1321,13 @@
                 }
                 relations.push({ from, to, type, desc });
             }
+            try {
+                world.pages ||= {};
+                world.pages.relations = serializeVisualEditor('page-relations');
+            } catch (error) {
+                showToast('* The bonds article could not be read.');
+                return;
+            }
             world.relations = relations;
             try {
                 await saveWorld(world);
@@ -1150,6 +1337,7 @@
             } catch (error) {
                 console.error('Could not save bonds:', error);
                 world.relations = previous;
+                world.pages.relations = previousPage;
                 showToast('* The bonds could not be saved.');
             }
         }
@@ -1159,6 +1347,13 @@
             row.className = 'grid grid-cols-2 gap-2';
             row.innerHTML = `<input aria-label="Property name" placeholder="e.g. mother" value="${escapeHtml(name)}" class="property-name bg-[#111118] border border-[#3a3a4d] rounded px-2 py-1 text-white"><input aria-label="Property value" placeholder="@character or value" value="${escapeHtml(value)}" class="property-value bg-[#111118] border border-[#3a3a4d] rounded px-2 py-1 text-white">`;
             document.getElementById('char-properties').appendChild(row);
+        }
+
+        function addCharacterPageProperty(name = '', value = '') {
+            const row = document.createElement('div');
+            row.className = 'character-page-property grid grid-cols-2 gap-2 mt-2';
+            row.innerHTML = `<input aria-label="Property name" placeholder="Property name" value="${escapeHtml(name)}" class="page-property-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Property value" placeholder="Value or @character" value="${escapeHtml(value)}" class="page-property-value bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white">`;
+            document.getElementById('character-page-properties').appendChild(row);
         }
 
         async function addArticleImage(file) {
@@ -1324,30 +1519,35 @@
         }
 
         function renderArticlesTab(world) {
-            const character = currentArticleKey === 'world'
-                ? null
-                : world.characters.find(item => item.id === currentArticleKey);
-            if (currentArticleKey !== 'world' && !character) currentArticleKey = 'world';
-            const article = getCurrentArticle(world);
-            const options = [`<option value="world" ${currentArticleKey === 'world' ? 'selected' : ''}>${escapeHtml(world.name)}</option>`]
-                .concat(world.characters.map(item => `<option value="${escapeHtml(item.id)}" ${currentArticleKey === item.id ? 'selected' : ''}>${escapeHtml(item.name)}</option>`))
-                .join('');
-            const title = character ? character.name : world.name;
-            const editor = articleEditing
-                ? `<div class="space-y-3">
-                       <textarea id="article-editor" rows="18" class="article-editor w-full bg-[#0e0e14] border border-[#3a3a4d] rounded p-4 text-gray-100 font-mono text-sm" placeholder="# An article&#10;&#10;Write in simple Markdown. Link characters with @Name. Add images with [[image:filename|caption|right]].">${escapeHtml(article)}</textarea>
-                       <div class="flex flex-wrap gap-3 items-center">
-                           <label class="cursor-pointer text-amber-300 underline">Add an image<input type="file" accept="image/*" class="hidden" onchange="addArticleImage(this.files[0]); this.value='';"></label>
-                           <span class="text-sm text-gray-400">Use # headings, **bold**, *italic*, @character and [[image:file|caption|right]].</span>
-                       </div>
-                       <div class="flex gap-2"><button onclick="saveArticle()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save article</button><button onclick="articleEditing=false; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div>
-                   </div>`
-                : `<div class="article-content leading-relaxed text-lg">${renderArticleMarkdown(article, world)}</div>
-                   <button onclick="editArticle()" class="mt-5 px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Edit</button>`;
-            return `<div class="border-b border-[#323244] pb-4 mb-6 flex flex-wrap items-end justify-between gap-4">
-                        <div><div class="text-xs font-pixel text-amber-400 mb-2">THE SCRIBES’ QUILL</div><h1 class="font-wiki-title text-3xl font-bold text-white">${escapeHtml(title)}</h1></div>
-                        <label class="font-wiki-title text-sm text-gray-300">Choose article <select onchange="setArticleTarget(this.value)" class="bg-[#0e0e14] border border-[#3a3a4d] px-3 py-2 rounded text-white">${options}</select></label>
-                    </div>${editor}`;
+            let character = world.characters.find(item => item.id === currentArticleKey);
+            if (!character && world.characters.length) {
+                character = world.characters[0];
+                currentArticleKey = character.id;
+            }
+            if (!character) return `<div><h1 class="font-wiki-title text-3xl text-white">Character articles</h1><p class="mt-4 text-gray-300">No characters are yet inscribed.</p><button onclick="openNewCharModal()" class="mt-4 px-4 py-2 bg-amber-600 text-black rounded">Add a character</button></div>`;
+            const article = character.article || character.bio || '';
+            const options = world.characters.map(item => `<option value="${escapeHtml(item.id)}" ${currentArticleKey === item.id ? 'selected' : ''}>${escapeHtml(item.name)}</option>`).join('');
+            const page = articleEditing
+                ? `<div class="space-y-5">
+                    <section class="grid gap-3 sm:grid-cols-2">
+                        <label class="text-sm text-amber-300">Name<input id="character-page-name" value="${escapeHtml(character.name)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
+                        <label class="text-sm text-amber-300">House<input id="character-page-house" value="${escapeHtml(character.house)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
+                        <label class="text-sm text-amber-300">Role<input id="character-page-role" value="${escapeHtml(character.role)}" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></label>
+                        <label class="text-sm text-amber-300">Status<select id="character-page-status" class="mt-1 w-full bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><option ${character.status === 'Living' ? 'selected' : ''}>Living</option><option ${character.status === 'Deceased' ? 'selected' : ''}>Deceased</option><option ${character.status === 'Unknown' ? 'selected' : ''}>Unknown</option></select></label>
+                    </section>
+                    <section><h2 class="font-wiki-title text-lg text-amber-400">Properties</h2><div id="character-page-properties">${Object.entries(character.properties || {}).map(([key, value]) => `<div class="character-page-property grid grid-cols-2 gap-2 mt-2"><input aria-label="Property name" value="${escapeHtml(key)}" class="page-property-name bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"><input aria-label="Property value" value="${escapeHtml(value)}" class="page-property-value bg-[#0e0e14] border border-[#3a3a4d] rounded px-3 py-2 text-white"></div>`).join('')}</div><button type="button" onclick="addCharacterPageProperty()" class="mt-2 text-amber-300 underline">+ Add property</button></section>
+                    <div><h2 class="font-wiki-title text-xl text-amber-400 mb-2">Article</h2>${renderVisualEditor(world, 'character-article-editor', article)}</div>
+                    <div class="flex gap-2"><button onclick="saveArticle()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Save page</button><button onclick="articleEditing=false; renderWikiContent()" class="px-4 py-2 border border-gray-600 rounded font-wiki-title text-sm">Cancel</button></div>
+                  </div>`
+                : `<div class="flex flex-wrap items-start justify-between gap-4 border-b border-[#323244] pb-4 mb-6">
+                       <div><div class="text-xs text-amber-400 mb-1">CHARACTER</div><h1 class="font-wiki-title text-3xl font-bold text-white">${escapeHtml(character.name)}</h1><p class="text-gray-400 mt-1">${escapeHtml(character.role || '')}</p></div>
+                       <div class="flex items-center gap-3"><select aria-label="Choose character" onchange="setArticleTarget(this.value)" class="bg-[#0e0e14] border border-[#3a3a4d] rounded px-2 py-2 text-white">${options}</select><button onclick="editArticle()" class="px-4 py-2 bg-amber-600 text-black rounded font-wiki-title text-sm">Edit</button></div>
+                   </div>
+                   <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem]">
+                       <article class="article-content leading-relaxed text-lg">${renderArticleMarkdown(article, world)}</article>
+                       <aside class="border border-[#3a3a4d] p-4 h-fit"><h2 class="font-wiki-title text-center text-amber-300 mb-3">${escapeHtml(character.name)}</h2><dl class="space-y-2 text-sm"><div><dt class="text-gray-400">House</dt><dd>${escapeHtml(character.house || '')}</dd></div><div><dt class="text-gray-400">Role</dt><dd>${escapeHtml(character.role || '')}</dd></div><div><dt class="text-gray-400">Status</dt><dd>${escapeHtml(character.status || '')}</dd></div>${Object.entries(character.properties || {}).map(([key, value]) => `<div><dt class="text-gray-400">${escapeHtml(key)}</dt><dd>${escapeHtml(value)}</dd></div>`).join('')}</dl></aside>
+                   </div>`;
+            return `<div>${page}</div>`;
         }
 
         function renderCharacterGraph(world) {
@@ -1524,7 +1724,7 @@
                                 </div>
                                 <div class="mt-4 pt-3 border-t border-[#2a2a3a] flex justify-between items-center text-xs font-wiki-title text-gray-500">
                                     <span>Character ID: #${escapeHtml(char.id.toUpperCase())}</span>
-                                    <div class="flex gap-3"><button onclick="editCharacter('${escapeHtml(char.id)}')" class="text-amber-300 underline">Edit details</button><button onclick="openCharacterArticle('${escapeHtml(char.id)}')" class="text-amber-400/70 underline">☼ Read article</button></div>
+                                    <div class="flex gap-3"><button onclick="editCharacterPage('${escapeHtml(char.id)}')" class="text-amber-300 underline">Edit</button><button onclick="openCharacterArticle('${escapeHtml(char.id)}')" class="text-amber-400/70 underline">View</button></div>
                                 </div>
                             </div>
                         `).join('')}
@@ -1537,7 +1737,7 @@
                 }
                 container.innerHTML = `
                     <div class="border-b border-[#323244] pb-4 mb-6">
-                        <div class="flex flex-wrap items-center justify-between gap-3"><div><div class="text-xs font-pixel text-amber-400 mb-1">LINEAGES &amp; BLOODLINES</div><h1 class="font-wiki-title text-3xl font-bold text-white">Family Tree</h1></div><button onclick="editLineages()" class="px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Edit lineages</button></div>
+                        <div class="flex flex-wrap items-center justify-between gap-3"><div><div class="text-xs font-pixel text-amber-400 mb-1">LINEAGES &amp; BLOODLINES</div><h1 class="font-wiki-title text-3xl font-bold text-white">Family Tree</h1></div><button onclick="editLineages()" class="px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Edit</button></div>
                     </div>
 
                     <p class="font-wiki-body italic text-lg text-gray-300 mb-8">
@@ -1609,7 +1809,7 @@
                             `).join('')}
                         </div>
                     </div>
-                    ${renderPageArticle(world, 'genealogy')}
+                    ${renderPageArticle(world, 'genealogy', false)}
                 `;
             } else if (currentWikiTab === 'relations') {
                 if (relationsEditing) {
@@ -1618,7 +1818,7 @@
                 }
                 container.innerHTML = `
                     <div class="border-b border-[#323244] pb-4 mb-6">
-                        <div class="flex flex-wrap items-center justify-between gap-3"><div><div class="text-xs font-pixel text-amber-400 mb-1">OATHS, BONDS &amp; FEUDS</div><h1 class="font-wiki-title text-3xl font-bold text-white">Bonds &amp; Feuds</h1></div><button onclick="editRelations()" class="px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Edit bonds</button></div>
+                        <div class="flex flex-wrap items-center justify-between gap-3"><div><div class="text-xs font-pixel text-amber-400 mb-1">OATHS, BONDS &amp; FEUDS</div><h1 class="font-wiki-title text-3xl font-bold text-white">Bonds &amp; Feuds</h1></div><button onclick="editRelations()" class="px-4 py-2 border border-amber-500/60 text-amber-200 rounded font-wiki-title text-sm">Edit</button></div>
                     </div>
 
                     <p class="font-wiki-body italic text-lg text-gray-300 mb-6">
@@ -1643,7 +1843,7 @@
                             </div>
                         `).join('')}
                     </div>
-                    ${renderPageArticle(world, 'relations')}
+                    ${renderPageArticle(world, 'relations', false)}
                 `;
             } else if (currentWikiTab === 'articles') {
                 container.innerHTML = renderArticlesTab(world);
@@ -1735,7 +1935,6 @@
 
         function openNewCharModal() {
             playBlip(580);
-            editingCharacterId = null;
             document.getElementById('char-modal-title').textContent = 'Inscribe a New Character';
             document.getElementById('char-save-button').textContent = 'Inscribe Character';
             ['char-name', 'char-house', 'char-role', 'char-bio'].forEach(id => { document.getElementById(id).value = ''; });
@@ -1743,28 +1942,6 @@
             document.getElementById('char-properties').innerHTML = '';
             addCharacterProperty('mother');
             addCharacterProperty('father');
-            document.getElementById('new-char-modal').classList.remove('hidden');
-        }
-
-        function editCharacter(id) {
-            const world = worldsData.find(item => item.id === currentWorldId);
-            const character = world.characters.find(item => item.id === id);
-            if (!character) return;
-            editingCharacterId = id;
-            document.getElementById('char-modal-title').textContent = 'Amend Character';
-            document.getElementById('char-save-button').textContent = 'Save Character';
-            document.getElementById('char-name').value = character.name;
-            document.getElementById('char-house').value = character.house;
-            document.getElementById('char-role').value = character.role;
-            document.getElementById('char-bio').value = character.bio;
-            document.getElementById('char-status').value = character.status;
-            document.getElementById('char-properties').innerHTML = '';
-            const properties = Object.entries(character.properties || {});
-            if (properties.length) properties.forEach(([key, value]) => addCharacterProperty(key, value));
-            else {
-                addCharacterProperty('mother');
-                addCharacterProperty('father');
-            }
             document.getElementById('new-char-modal').classList.remove('hidden');
         }
 
@@ -1792,22 +1969,22 @@
             }
 
             const world = worldsData.find(w => w.id === currentWorldId);
-            const existing = editingCharacterId
-                ? world.characters.find(character => character.id === editingCharacterId)
-                : null;
-            const previous = existing ? { ...existing } : null;
-            const character = existing || {
+            const character = {
                 id: `c${world.characters.length + 10}`,
+                name,
+                house,
+                role,
+                status,
+                bio,
+                properties,
                 article: ''
             };
-            Object.assign(character, { name, house, role, status, bio, properties });
-            if (!existing) world.characters.push(character);
+            world.characters.push(character);
             try {
                 await saveWorld(world);
             } catch (error) {
                 console.error('Could not save character:', error);
-                if (existing) Object.assign(existing, previous);
-                else world.characters.pop();
+                world.characters.pop();
                 showToast('* This character could not be saved to this device.');
                 return;
             }
@@ -1816,7 +1993,6 @@
             document.getElementById('char-house').value = '';
             document.getElementById('char-role').value = '';
             document.getElementById('char-bio').value = '';
-            editingCharacterId = null;
 
             closeNewCharModal();
             renderWiki();
