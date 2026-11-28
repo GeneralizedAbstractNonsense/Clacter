@@ -1,5 +1,7 @@
 # CLACTER
 A chronicle for worldbuilders, characters and their tangled fates.
+The archive begins with one sample realm; realms thou hast created or imported
+remain in thy local library.
 
 ## Run and install
 
@@ -12,8 +14,11 @@ Screen**.
 
 ## Articles and characters
 
-In the wiki, choose **Articles**, select a world or character, then press **Edit**.
-Saving returns to the reading view. The editor understands headings (`#`, `##`,
+The **Realm Overview** can be amended with its **Edit overview** control.
+Characters may be edited from their cards; lineages and bonds from their own
+edit controls. Each wiki section also hath its own editable chronicle text.
+In **Articles**, select a world or character, then press **Edit**; saving returns
+to the reading view. The editor understands headings (`#`, `##`,
 `###`), **bold**, *italic*, lists beginning with `-`, and character mentions such
 as `@Aurelia` or `@Queen_Aurelia_the_Pale`. Image uploads are inserted with
 captions; the equivalent article syntax is:
@@ -37,4 +42,3 @@ the browser supports them. For archives exceeding 1 GiB, export requires a
 browser with streaming file-save support; imports of individual images over
 64 MiB require OPFS. Actual storage limits remain those imposed by the device
 and browser.
-
