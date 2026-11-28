@@ -17,6 +17,8 @@ Screen**.
 The **Realm Overview** can be amended with its **Edit overview** control.
 Characters may be edited from their cards; lineages and bonds from their own
 edit controls. Each wiki section also hath its own editable chronicle text.
+Use the left **Contents** list to move between sections; import, export, document
+conversion, and installation are grouped beneath **Tools** in the compact header.
 In **Articles**, select a world or character, then press **Edit**; saving returns
 to the reading view. The editor understands headings (`#`, `##`,
 `###`), **bold**, *italic*, lists beginning with `-`, and character mentions such
