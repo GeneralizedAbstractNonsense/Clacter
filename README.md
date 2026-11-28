@@ -15,12 +15,14 @@ Screen**.
 ## Articles and characters
 
 The **Realm Overview** can be amended with its **Edit overview** control.
-Characters may be edited from their cards; lineages and bonds from their own
-edit controls. Each wiki section also hath its own editable chronicle text.
+Character cards open the full page in view or edit mode; a character's article,
+infobox details, and custom properties are edited together. Lineages and bonds
+have their own edit controls, and each wiki section hath editable chronicle text.
 Use the left **Contents** list to move between sections; import, export, document
 conversion, and installation are grouped beneath **Tools** in the compact header.
-In **Articles**, select a world or character, then press **Edit**; saving returns
-to the reading view. The editor understands headings (`#`, `##`,
+In **Articles**, select a character, then press **Edit**; saving returns to the
+reading view. Add custom infobox properties with **+ Add property**. The editor
+understands headings (`#`, `##`,
 `###`), **bold**, *italic*, lists beginning with `-`, and character mentions such
 as `@Aurelia` or `@Queen_Aurelia_the_Pale`. Image uploads are inserted with
 captions; the equivalent article syntax is:
@@ -31,8 +33,8 @@ captions; the equivalent article syntax is:
 
 Use `left` instead of `right` to float an image to the left. Mentions and custom
 character properties (for example `mother: @Aurelia`) populate **Character Links**
-and **Family Tree**. Add as many properties as needed when creating a
-character. The **Google Docs** control imports a `.docx` downloaded from Google
+and **Family Tree**. Add as many properties as needed when creating or editing
+a character. The **Google Docs** control imports a `.docx` downloaded from Google
 Docs, carrying headings and embedded images into the selected world's article.
 
 ## Import and export
